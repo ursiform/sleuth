@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	port  = 5670
 	group = "SLEUTH-v0"
+	port  = 5670
 	recv  = "RECV"
 	resp  = "RESP"
 )
@@ -42,9 +42,9 @@ func announce(done chan *Client, conn *connection, verbose bool) {
 		done <- nil
 		return
 	}
-	client := newClient(node)
+	client := newClient(node, verbose)
 	done <- client
-	go interceptInterrupt(node)
+	go interceptInterrupt(verbose, node)
 	for {
 		event := <-node.Events()
 		switch event.Type() {
@@ -64,11 +64,11 @@ func failure(verbose bool, err error, code string) error {
 	return err
 }
 
-func interceptInterrupt(node *gyre.Gyre) {
+func interceptInterrupt(verbose bool, node *gyre.Gyre) {
 	interrupt := make(chan os.Signal)
 	signal.Notify(interrupt, os.Interrupt)
 	_ = <-interrupt
-	fmt.Printf("\nleaving %s...\n", group)
+	notify(verbose, "info", fmt.Sprintf("leaving %s...", group))
 	_ = node.Leave(group)
 	_ = node.Stop()
 	os.Exit(0)
@@ -164,6 +164,8 @@ func New(handler http.Handler, verbose bool) (*Client, error) {
 func notify(verbose bool, level string, message string) {
 	var prefix string
 	switch level {
+	case "info":
+		prefix = "[information]"
 	case "initialize":
 		prefix = "[initialized]"
 	case "listen":

@@ -40,6 +40,7 @@ type Client struct {
 	Timeout   time.Duration
 	// services maps the name of a service with the list of service worker nodes.
 	services map[string]*serviceWorkers
+	verbose  bool
 }
 
 func (client *Client) add(event *gyre.Event) {
@@ -59,7 +60,8 @@ func (client *Client) add(event *gyre.Event) {
 		client.services[service] = newWorkers()
 	}
 	client.services[service].add(name, node, version)
-	fmt.Printf("[%s add] %s/%s: %s\n", group, service, version, name)
+	notify(client.verbose, "info",
+		fmt.Sprintf("sleuth: add %s/%s [%s] to %s", service, version, name, group))
 }
 
 func (client *Client) dispatch(event *gyre.Event) {
@@ -133,7 +135,8 @@ func (client *Client) remove(event *gyre.Event) {
 			delete(client.services, service)
 		}
 		delete(client.directory, name)
-		fmt.Printf("[%s remove] %s: %s\n", group, service, name)
+		notify(client.verbose, "info",
+			fmt.Sprintf("sleuth: remove %s [%s] from %s", service, name, group))
 	}
 }
 
@@ -156,7 +159,7 @@ func (client *Client) timeout(handle string) {
 	}
 }
 
-func newClient(node *gyre.Gyre) *Client {
+func newClient(node *gyre.Gyre, verbose bool) *Client {
 	return &Client{
 		directory: make(map[string]string),
 		listeners: &listenerHandles{
@@ -164,5 +167,6 @@ func newClient(node *gyre.Gyre) *Client {
 			make(map[string]chan *http.Response)},
 		node:     node,
 		Timeout:  timeout,
-		services: make(map[string]*serviceWorkers)}
+		services: make(map[string]*serviceWorkers),
+		verbose:  verbose}
 }
