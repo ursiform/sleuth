@@ -208,7 +208,7 @@ func TestSimultaneousPosts(t *testing.T) {
 		}
 	}(server)
 	// Create client.
-	client, err := New(nil, "")
+	client, err := New(nil, "test-data/client-3.json")
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -220,9 +220,13 @@ func TestSimultaneousPosts(t *testing.T) {
 	}(client)
 	// Wait until the server has been added to the client pool.
 	client.WaitFor("sleuth-test-server-five")
+	requests := 2
 	body := "foo bar baz"
-	for i := 0; i < 2; i++ {
-		go func(t *testing.T, client *Client) {
+	done := make(chan bool)
+	total := 0
+	for i := 0; i < requests; i++ {
+		go func(t *testing.T, client *Client, done chan bool) {
+			defer func() { done <- true }()
 			buffer := bytes.NewBuffer([]byte(body))
 			request, err := http.NewRequest("POST", "/", buffer)
 			if err != nil {
@@ -239,6 +243,11 @@ func TestSimultaneousPosts(t *testing.T) {
 				t.Errorf("expected %s to equal %s", string(output), body)
 				return
 			}
-		}(t, client)
+		}(t, client, done)
+	}
+	for _ = range done {
+		if total++; total == requests {
+			return
+		}
 	}
 }
