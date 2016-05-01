@@ -28,7 +28,7 @@ type request struct {
 func marshalRequest(receiver, handle string, in *http.Request) ([]byte, error) {
 	out := new(request)
 	if in.Body != nil {
-		if body, err := ioutil.ReadAll(in.Body); err != nil {
+		if body, err := ioutil.ReadAll(in.Body); err == nil {
 			out.Body = body
 		}
 	}
@@ -40,7 +40,7 @@ func marshalRequest(receiver, handle string, in *http.Request) ([]byte, error) {
 	if marshalled, err := json.Marshal(out); err != nil {
 		return nil, err
 	} else {
-		return append([]byte(group+resp), marshalled...), nil
+		return append([]byte(group+repl), marshalled...), nil
 	}
 }
 

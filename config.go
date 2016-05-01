@@ -7,13 +7,17 @@ package sleuth
 import (
 	"encoding/json"
 	"io/ioutil"
+
+	"github.com/ursiform/logger"
 )
 
 const ConfigFile = "bear.json"
 
 type appConfig struct {
-	Service *serviceConfig `json:"service,omitempty"`
-	Sleuth  *sleuthConfig  `json:"sleuth,omitempty"`
+	LogLevel     int
+	LogLevelName string         `json:"loglevel,omitempty"`
+	Service      *serviceConfig `json:"service,omitempty"`
+	Sleuth       *sleuthConfig  `json:"sleuth,omitempty"`
 }
 
 type serviceConfig struct {
@@ -26,12 +30,24 @@ type sleuthConfig struct {
 	Port      int    `json:"port,omitempty"`
 }
 
-func loadConfig() *appConfig {
+func loadConfig(file string) *appConfig {
 	appConfig := &appConfig{
 		Service: new(serviceConfig),
 		Sleuth:  new(sleuthConfig)}
-	if data, err := ioutil.ReadFile(ConfigFile); err == nil {
+	if data, err := ioutil.ReadFile(file); err == nil {
 		_ = json.Unmarshal(data, appConfig)
+	}
+	if len(appConfig.LogLevelName) == 0 {
+		appConfig.LogLevelName = "listen"
+	}
+	level, ok := logger.LogLevel[appConfig.LogLevelName]
+	if !ok {
+		logger.MustError("loglevel=\"%s\" in %s is invalid; using \"%s\"",
+			appConfig.LogLevelName, file, "debug")
+		appConfig.LogLevelName = "debug"
+		appConfig.LogLevel = logger.Debug
+	} else {
+		appConfig.LogLevel = level
 	}
 	return appConfig
 }

@@ -5,15 +5,15 @@
 package sleuth
 
 const (
-	ErrorSleuthServiceUndefined = "900"
-	ErrorSleuthInitialize       = "901"
-	ErrorSleuthStart            = "902"
-	ErrorSleuthJoin             = "903"
-	ErrorSleuthInterface        = "904"
-	ErrorSleuthSetPort          = "905"
-	ErrorSleuthNodeHeader       = "906"
-	ErrorSleuthServiceHeader    = "907"
-	ErrorSleuthVersionHeader    = "908"
-	ErrorSleuthGroupHeader      = "909"
-	ErrorSleuthSetVerbose       = "910"
+	ErrorServiceUndefined = 900
+	ErrorInitialize       = 901
+	ErrorStart            = 902
+	ErrorJoin             = 903
+	ErrorInterface        = 904
+	ErrorSetPort          = 905
+	ErrorNodeHeader       = 906
+	ErrorServiceHeader    = 907
+	ErrorVersionHeader    = 908
+	ErrorGroupHeader      = 909
+	ErrorSetVerbose       = 910
 )

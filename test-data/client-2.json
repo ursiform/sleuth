@@ -1,0 +1,9 @@
+{
+  "loglevel": "foo",
+  "service": {
+    "name": "sleuth-test-client-two"
+  },
+  "sleuth": {
+    "interface": "lo0"
+  }
+}
