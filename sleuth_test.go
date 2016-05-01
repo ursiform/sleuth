@@ -251,3 +251,11 @@ func TestSimultaneousPosts(t *testing.T) {
 		}
 	}
 }
+
+func TestBadInterfaceInConfig(t *testing.T) {
+	// Create client.
+	if _, err := New(nil, "test-data/client-4.json"); err == nil {
+		t.Errorf("client instantiation should have failed")
+		return
+	}
+}
