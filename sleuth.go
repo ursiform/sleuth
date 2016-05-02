@@ -28,6 +28,7 @@ var (
 
 type connection struct {
 	adapter string
+	handler http.Handler
 	name    string
 	node    string
 	port    int
@@ -35,14 +36,20 @@ type connection struct {
 	version string
 }
 
-func announce(done chan *Client, conn *connection, out *logger.Logger) {
+type instance struct {
+	client *Client
+	err    error
+}
+
+func announce(conn *connection, out *logger.Logger, result chan *instance) {
 	node, err := newNode(out, conn)
 	if err != nil {
-		done <- nil
+		result <- &instance{client: nil, err: err}
 		return
 	}
 	client := newClient(node, out)
-	done <- client
+	client.handler = conn.handler
+	result <- &instance{client: client, err: nil}
 	for {
 		event := <-node.Events()
 		switch event.Type() {
@@ -131,6 +138,7 @@ func New(handler http.Handler, configFile string) (*Client, error) {
 	if handler == nil {
 		out.Init("sleuth: New - handler is nil, client-only mode")
 	} else {
+		conn.handler = handler
 		conn.name = config.Service.Name
 		if len(conn.name) == 0 {
 			err := fmt.Errorf("sleuth: New - %s not defined in %s",
@@ -151,13 +159,8 @@ func New(handler http.Handler, configFile string) (*Client, error) {
 	if len(conn.version) == 0 {
 		conn.version = "unknown"
 	}
-	done := make(chan *Client, 1)
-	go announce(done, conn, out)
-	client := <-done
-	if client == nil {
-		return nil, fmt.Errorf("sleuth: New - unable to announce")
-	}
-	client.log = out
-	client.handler = handler
-	return client, nil
+	done := make(chan *instance, 1)
+	go announce(conn, out, done)
+	result := <-done
+	return result.client, result.err
 }
