@@ -135,9 +135,7 @@ func New(handler http.Handler, configFile string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	if handler == nil {
-		out.Init("sleuth: New - handler is nil, client-only mode")
-	} else {
+	if conn.server = handler != nil; conn.server {
 		conn.handler = handler
 		conn.name = config.Service.Name
 		if len(conn.name) == 0 {
@@ -145,18 +143,16 @@ func New(handler http.Handler, configFile string) (*Client, error) {
 				"service.name", ConfigFile)
 			return nil, failure(out, err, ErrorServiceUndefined)
 		}
+	} else {
+		out.Init("sleuth: New - handler is nil, client-only mode")
 	}
-	conn.server = handler != nil
-	conn.adapter = config.Sleuth.Interface
-	if len(conn.adapter) == 0 {
+	if conn.adapter = config.Sleuth.Interface; len(conn.adapter) == 0 {
 		out.Warn("sleuth: New - sleuth.interface not defined in %s", ConfigFile)
 	}
-	conn.port = config.Sleuth.Port
-	if conn.port == 0 {
+	if conn.port = config.Sleuth.Port; conn.port == 0 {
 		conn.port = port
 	}
-	conn.version = config.Service.Version
-	if len(conn.version) == 0 {
+	if conn.version = config.Service.Version; len(conn.version) == 0 {
 		conn.version = "unknown"
 	}
 	done := make(chan *instance, 1)

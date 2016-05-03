@@ -23,4 +23,8 @@ _testmain.go
 *.test
 *.prof
 
+# Mac
+.DS_Store
+
+# Tests
 coverage.out

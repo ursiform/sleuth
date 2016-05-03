@@ -239,6 +239,8 @@ func TestSimultaneousPosts(t *testing.T) {
 				return
 			}
 			output, _ := ioutil.ReadAll(response.Body)
+			// It's not really necessary to close a sleuth response.
+			response.Body.Close()
 			if string(output) != body {
 				t.Errorf("expected %s to equal %s", string(output), body)
 				return
@@ -257,5 +259,19 @@ func TestBadInterfaceInConfig(t *testing.T) {
 	if _, err := New(nil, "test-data/client-4.json"); err == nil {
 		t.Errorf("client instantiation should have failed")
 		return
+	}
+}
+
+func TestBadResponsePayload(t *testing.T) {
+	payload := []byte("{bad json}")
+	if _, _, err := unmarshalResponse(payload); err == nil {
+		t.Errorf("expected bad response to be unparseable")
+	}
+}
+
+func TestBadRequestPayload(t *testing.T) {
+	payload := []byte("{bad json}")
+	if _, _, err := unmarshalRequest(payload); err == nil {
+		t.Errorf("expected bad request to be unparseable")
 	}
 }
