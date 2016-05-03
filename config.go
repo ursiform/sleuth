@@ -11,6 +11,8 @@ import (
 	"github.com/ursiform/logger"
 )
 
+// ConfigFile is the default config file that sleuth will check for if no
+// other file location is passed into New.
 const ConfigFile = "bear.json"
 
 type appConfig struct {

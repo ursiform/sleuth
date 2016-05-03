@@ -4,6 +4,8 @@
 
 package sleuth
 
+// Peer describes the location of a peer on the sleuth network and the service,
+// if any, that it offers.
 type Peer struct {
 	// Name is the short public name attached to all events/peers.
 	Name string

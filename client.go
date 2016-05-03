@@ -25,11 +25,15 @@ type waiterChannels struct {
 	additions chan *Peer
 }
 
+// Client is the peer on the sleuth network that makes requests and, if a
+// handler has been provided, responds to peer requests.
 type Client struct {
 	handler   http.Handler
 	node      *gyre.Gyre
 	listeners *listenerHandles
 	log       *logger.Logger
+	// Timeout is the duration to wait before an outstanding request times out.
+	// By default, it is set to 500ms.
 	Timeout   time.Duration
 	waiters   *waiterChannels
 	directory map[string]string          // map[node-name]service-type
@@ -66,6 +70,7 @@ func (client *Client) add(event *gyre.Event) {
 	client.log.Info("sleuth: add - %s/%s %s to %s", service, version, name, group)
 }
 
+// Close leaves the sleuth network and stops the Gyre/Zyre node.
 func (client *Client) Close() error {
 	client.log.Info("%s leaving %s...", client.node.Name(), group)
 	if err := client.node.Leave(group); err != nil {

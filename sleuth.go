@@ -18,8 +18,10 @@ import (
 	"github.com/zeromq/gyre"
 )
 
+// Debug enables logging of underlying Gyre/Zyre messages when set to true.
+var Debug = false
+
 var (
-	Debug = false
 	group = "SLEUTH-v0"
 	port  = 5670
 	recv  = "RECV"
@@ -120,7 +122,9 @@ func newNode(out *logger.Logger, conn *connection) (*gyre.Gyre, error) {
 
 // New is the entry point to the sleuth package. It returns a reference to a
 // Client object that has joined the local network. If the handler argument is
-// not nil, the Client also answers requests from other peers.
+// not nil, the Client also answers requests from other peers. If the configFile
+// argument is an empty string, sleuth will automatically attempt to load
+// the ConfigFile (bear.json).
 func New(handler http.Handler, configFile string) (*Client, error) {
 	var file string
 	if len(configFile) > 0 {
