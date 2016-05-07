@@ -5,15 +5,28 @@
 package sleuth
 
 const (
-	ErrorServiceUndefined = 900
-	ErrorInitialize       = 901
-	ErrorStart            = 902
-	ErrorJoin             = 903
-	ErrorInterface        = 904
-	ErrorSetPort          = 905
-	ErrorNodeHeader       = 906
-	ErrorServiceHeader    = 907
-	ErrorVersionHeader    = 908
-	ErrorGroupHeader      = 909
-	ErrorSetVerbose       = 910
+	// Warnings are in the 800-899 range.
+	warnInterface = 801
+	warnClose     = 802
+	warnAdd       = 803
+	// Errors are in the 900-999 range.
+	errServiceUndefined = 900
+	errInitialize       = 901
+	errStart            = 902
+	errJoin             = 903
+	errInterface        = 904
+	errSetPort          = 905
+	errNodeHeader       = 906
+	errServiceHeader    = 907
+	errVersionHeader    = 908
+	errGroupHeader      = 909
+	errSetVerbose       = 910
+	errReply            = 911
+	errDispatchHeader   = 912
+	errDispatchAction   = 913
+	errUnknownService   = 914
+	errTimeout          = 915
+	errReceiveUnmarshal = 916
+	errReceiveHandle    = 917
+	errLogLevel         = 918
 )

@@ -11,6 +11,7 @@
 package sleuth
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -65,50 +66,51 @@ func announce(conn *connection, out *logger.Logger, result chan *instance) {
 	}
 }
 
-func failure(out *logger.Logger, err error, code int) error {
-	out.Error("sleuth: %s (%d)", err.Error(), code)
-	return err
+func failure(out *logger.Logger, message string, code int) error {
+	text := fmt.Sprintf("sleuth: %s (%d)", message, code)
+	out.Error(text)
+	return errors.New(text)
 }
 
 func newNode(out *logger.Logger, conn *connection) (*gyre.Gyre, error) {
 	node, err := gyre.New()
 	if err != nil {
-		return nil, failure(out, err, ErrorInitialize)
+		return nil, failure(out, err.Error(), errInitialize)
 	}
 	if err := node.SetPort(conn.port); err != nil {
-		return nil, failure(out, err, ErrorSetPort)
+		return nil, failure(out, err.Error(), errSetPort)
 	}
 	if len(conn.adapter) > 0 {
 		if err := node.SetInterface(conn.adapter); err != nil {
-			return nil, failure(out, err, ErrorInterface)
+			return nil, failure(out, err.Error(), errInterface)
 		}
 	}
 	if Debug {
 		if err := node.SetVerbose(); err != nil {
-			return nil, failure(out, err, ErrorSetVerbose)
+			return nil, failure(out, err.Error(), errSetVerbose)
 		}
 	}
 	// If announcing a service, add service headers.
 	if conn.server {
 		if err := node.SetHeader("group", group); err != nil {
-			return nil, failure(out, err, ErrorGroupHeader)
+			return nil, failure(out, err.Error(), errGroupHeader)
 		}
 		if err := node.SetHeader("node", node.UUID()); err != nil {
-			return nil, failure(out, err, ErrorNodeHeader)
+			return nil, failure(out, err.Error(), errNodeHeader)
 		}
 		if err := node.SetHeader("type", conn.name); err != nil {
-			return nil, failure(out, err, ErrorServiceHeader)
+			return nil, failure(out, err.Error(), errServiceHeader)
 		}
 		if err := node.SetHeader("version", conn.version); err != nil {
-			return nil, failure(out, err, ErrorVersionHeader)
+			return nil, failure(out, err.Error(), errVersionHeader)
 		}
 	}
 	if err := node.Start(); err != nil {
-		return nil, failure(out, err, ErrorStart)
+		return nil, failure(out, err.Error(), errStart)
 	}
 	if err := node.Join(group); err != nil {
 		node.Stop()
-		return nil, failure(out, err, ErrorJoin)
+		return nil, failure(out, err.Error(), errJoin)
 	}
 	var role string
 	if conn.server {
@@ -143,15 +145,15 @@ func New(handler http.Handler, configFile string) (*Client, error) {
 		conn.handler = handler
 		conn.name = config.Service.Name
 		if len(conn.name) == 0 {
-			err := fmt.Errorf("sleuth: New - %s not defined in %s",
-				"service.name", ConfigFile)
-			return nil, failure(out, err, ErrorServiceUndefined)
+			message := fmt.Sprintf("service.name not defined in %s", file)
+			return nil, failure(out, message, errServiceUndefined)
 		}
 	} else {
-		out.Init("sleuth: New - handler is nil, client-only mode")
+		out.Init("sleuth: handler is nil, client-only mode")
 	}
 	if conn.adapter = config.Sleuth.Interface; len(conn.adapter) == 0 {
-		out.Warn("sleuth: New - sleuth.interface not defined in %s", ConfigFile)
+		out.Warn("sleuth: sleuth.interface not defined in %s (%d)",
+			file, warnInterface)
 	}
 	if conn.port = config.Sleuth.Port; conn.port == 0 {
 		conn.port = port
