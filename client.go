@@ -40,21 +40,16 @@ type Client struct {
 	services  map[string]*serviceWorkers // map[service-name]service-workers
 }
 
-func (client *Client) add(event *gyre.Event) {
-	name := event.Name()
-	if header, ok := event.Header("group"); !ok || header != group {
+func (client *Client) add(groupID, name, node, service, version string) error {
+	if groupID != group {
 		client.log.Debug("sleuth: add - no group header for %s, client-only", name)
-		return
+		return nil
 	}
 	peer := &Peer{Name: name}
-	service, okService := event.Header("type")
-	node, okNode := event.Header("node")
-	version, _ := event.Header("version")
-	// Service and node are required. Version is optional.
-	if !(okService && okNode) {
-		client.log.Warn("sleuth: failed to add %s type?=%t, node?=%t (%d)",
-			name, okService, okNode, warnAdd)
-		return
+	// Node and service are required. Version is optional.
+	if len(node) == 0 || len(service) == 0 {
+		return fmt.Errorf("sleuth: failed to add %s node?=%t, type?=%t (%d)",
+			name, len(node) > 0, len(service) > 0, warnAdd)
 	}
 	peer.Node = node
 	peer.Service = service
@@ -68,6 +63,7 @@ func (client *Client) add(event *gyre.Event) {
 		client.waiters.additions <- peer
 	}
 	client.log.Info("sleuth: add %s/%s %s to %s", service, version, name, group)
+	return nil
 }
 
 // Close leaves the sleuth network and stops the Gyre/Zyre node.
@@ -83,26 +79,26 @@ func (client *Client) Close() error {
 	return nil
 }
 
-func (client *Client) dispatch(event *gyre.Event) {
-	message := event.Msg()
+func (client *Client) dispatch(payload []byte) error {
 	// Returned responses (RECV command) and outstanding requests (REPL command)
 	// have these headers, respectively: SLEUTH-V0RECV and SLEUTH-V0REPL
 	groupLength := len(group)
 	dispatchLength := 4
 	headerLength := groupLength + dispatchLength
 	// If the message header does not match the group, bail.
-	if len(message) < headerLength || string(message[0:groupLength]) != group {
-		client.log.Error("sleuth: bad header (%d)", errDispatchHeader)
-		return
+	if len(payload) < headerLength || string(payload[0:groupLength]) != group {
+		return fmt.Errorf("sleuth: bad header (%d)", errDispatchHeader)
 	}
-	action := string(message[groupLength : groupLength+dispatchLength])
+	action := string(payload[groupLength : groupLength+dispatchLength])
 	switch action {
 	case recv:
-		client.receive(message[headerLength:])
+		client.receive(payload[headerLength:])
+		return nil
 	case repl:
-		client.reply(message[headerLength:])
+		client.reply(payload[headerLength:])
+		return nil
 	default:
-		client.log.Error("sleuth: bad action: %s (%d)", action, errDispatchAction)
+		return fmt.Errorf("sleuth: bad action: %s (%d)", action, errDispatchAction)
 	}
 }
 
@@ -159,8 +155,7 @@ func (client *Client) receive(payload []byte) {
 	}
 }
 
-func (client *Client) remove(event *gyre.Event) {
-	name := event.Name()
+func (client *Client) remove(name string) {
 	if service, ok := client.directory[name]; ok {
 		remaining, _ := client.services[service].remove(name)
 		if remaining == 0 {

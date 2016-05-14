@@ -57,11 +57,19 @@ func announce(conn *connection, out *logger.Logger, result chan *instance) {
 		event := <-node.Events()
 		switch event.Type() {
 		case gyre.EventEnter:
-			client.add(event)
+			groupID, _ := event.Header("group")
+			name := event.Name()
+			node, _ := event.Header("node")
+			service, _ := event.Header("type")
+			version, _ := event.Header("version")
+			if err := client.add(groupID, name, node, service, version); err != nil {
+				out.Warn(err.Error())
+			}
 		case gyre.EventExit, gyre.EventLeave:
-			client.remove(event)
+			name := event.Name()
+			client.remove(name)
 		case gyre.EventWhisper:
-			client.dispatch(event)
+			client.dispatch(event.Msg())
 		}
 	}
 }

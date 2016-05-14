@@ -30,9 +30,8 @@ func (res *responseWriter) Write(data []byte) (int, error) {
 		header.Add("Content-Type", http.DetectContentType(data[:512]))
 	}
 	res.output.Body = data
-	if payload, err := marshalResponse(res.output); err != nil {
-		return 0, err
-	} else if err := res.node.Whisper(res.peer, payload); err != nil {
+	payload := marshalResponse(res.output)
+	if err := res.node.Whisper(res.peer, payload); err != nil {
 		return 0, err
 	} else {
 		return len(data), nil

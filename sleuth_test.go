@@ -209,6 +209,8 @@ func TestSimultaneousPosts(t *testing.T) {
 	}(server)
 	// Create client.
 	client, err := New(nil, "test-data/client-3.json")
+	// Set timeout to 1.5 seconds to accommodate slow test spin-up.
+	client.Timeout = time.Millisecond * 1500
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -222,11 +224,11 @@ func TestSimultaneousPosts(t *testing.T) {
 	client.WaitFor("sleuth-test-server-five")
 	requests := 2
 	body := "foo bar baz"
-	done := make(chan bool)
+	done := make(chan struct{})
 	total := 0
 	for i := 0; i < requests; i++ {
-		go func(t *testing.T, client *Client, done chan bool) {
-			defer func() { done <- true }()
+		go func(t *testing.T, client *Client, done chan struct{}) {
+			defer func() { done <- struct{}{} }()
 			buffer := bytes.NewBuffer([]byte(body))
 			request, err := http.NewRequest("POST", "/", buffer)
 			if err != nil {
@@ -273,5 +275,62 @@ func TestBadRequestPayload(t *testing.T) {
 	payload := []byte("{bad json}")
 	if _, _, err := unmarshalRequest(payload); err == nil {
 		t.Errorf("expected bad request to be unparseable")
+	}
+}
+
+func TestAddBadGroupMember(t *testing.T) {
+	// Create client.
+	client, err := New(nil, "")
+	if err != nil {
+		t.Errorf("client instantiation failed: %s", err.Error())
+		return
+	}
+	defer func(client *Client) {
+		if err := client.Close(); err != nil {
+			t.Errorf("client close failed: %s", err.Error())
+		}
+	}(client)
+	name := "foo"
+	node := "bar"
+	service := ""
+	version := ""
+	if err := client.add(group, name, node, service, version); err == nil {
+		t.Errorf("expected bad group member to not be added")
+	}
+}
+
+func TestDispatchEmptyPayload(t *testing.T) {
+	// Create client.
+	client, err := New(nil, "")
+	if err != nil {
+		t.Errorf("client instantiation failed: %s", err.Error())
+		return
+	}
+	defer func(client *Client) {
+		if err := client.Close(); err != nil {
+			t.Errorf("client close failed: %s", err.Error())
+		}
+	}(client)
+	payload := []byte{}
+	if err := client.dispatch(payload); err == nil {
+		t.Errorf("expected empty payload to fail dispatch")
+	}
+}
+
+func TestDispatchBadDispatchAction(t *testing.T) {
+	// Create client.
+	client, err := New(nil, "")
+	if err != nil {
+		t.Errorf("client instantiation failed: %s", err.Error())
+		return
+	}
+	defer func(client *Client) {
+		if err := client.Close(); err != nil {
+			t.Errorf("client close failed: %s", err.Error())
+		}
+	}(client)
+	payload := []byte(group + "boom")
+	if err := client.dispatch(payload); err == nil {
+		t.Errorf("expected bad dispatch action to fail")
 	}
 }
