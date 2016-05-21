@@ -17,12 +17,12 @@ type destination struct {
 }
 
 type request struct {
-	Body     []byte              `json:"a,omitempty"`
-	Handle   string              `json:"b"`
-	Header   map[string][]string `json:"c"`
-	Method   string              `json:"d"`
-	Receiver string              `json:"e"`
-	URL      string              `json:"f"`
+	Body     []byte              `json:"body,omitempty"`
+	Handle   string              `json:"handle"`
+	Header   map[string][]string `json:"header"`
+	Method   string              `json:"method"`
+	Receiver string              `json:"receiver"`
+	URL      string              `json:"url"`
 }
 
 func marshalRequest(receiver, handle string, in *http.Request) ([]byte, error) {
@@ -34,6 +34,9 @@ func marshalRequest(receiver, handle string, in *http.Request) ([]byte, error) {
 	}
 	out.Header = map[string][]string(in.Header)
 	out.Method = in.Method
+	// Scheme and Host are used by sleuth for routing, but should not be sent.
+	in.URL.Scheme = ""
+	in.URL.Host = ""
 	out.URL = in.URL.String()
 	out.Receiver = receiver
 	out.Handle = handle

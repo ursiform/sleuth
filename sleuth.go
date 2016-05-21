@@ -23,10 +23,11 @@ import (
 var Debug = false
 
 var (
-	group = "SLEUTH-v0"
-	port  = 5670
-	recv  = "RECV"
-	repl  = "REPL"
+	group  = "SLEUTH-v0"
+	port   = 5670
+	recv   = "RECV"
+	repl   = "REPL"
+	scheme = "sleuth"
 )
 
 type connection struct {

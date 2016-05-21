@@ -50,13 +50,14 @@ func TestRequestResponseCycle(t *testing.T) {
 		}
 	}(server)
 	// Wait until the server has been added to the client pool.
-	client.WaitFor("sleuth-test")
-	request, err := http.NewRequest("GET", "/"+ConfigFile, nil)
+	addr := "sleuth-test"
+	client.WaitFor(addr)
+	request, err := http.NewRequest("GET", scheme+"://"+addr+"/"+ConfigFile, nil)
 	if err != nil {
 		t.Errorf("request instantiation failed: %s", err.Error())
 		return
 	}
-	response, err := client.Do(request, "sleuth-test")
+	response, err := client.Do(request)
 	if err != nil {
 		t.Errorf("client.Do failed: %s", err.Error())
 		return
@@ -133,13 +134,14 @@ func TestTimeout(t *testing.T) {
 	// If the server is ready, then WaitFor will not block.
 	<-time.After(2000 * time.Millisecond)
 	// Wait until the server has been added to the client pool.
-	client.WaitFor("sleuth-test-server-three")
-	request, err := http.NewRequest("GET", "/", nil)
+	addr := "sleuth-test-server-three"
+	client.WaitFor(addr)
+	request, err := http.NewRequest("GET", scheme+"://"+addr+"/", nil)
 	if err != nil {
 		t.Errorf("request instantiation failed: %s", err.Error())
 		return
 	}
-	_, err = client.Do(request, "sleuth-test-server-three")
+	_, err = client.Do(request)
 	if err == nil {
 		t.Errorf("client request should have timed out")
 		return
@@ -158,13 +160,37 @@ func TestUnknownServiceRequest(t *testing.T) {
 			t.Errorf("client close failed: %s", err.Error())
 		}
 	}(client)
-	request, err := http.NewRequest("GET", "/", nil)
+	addr := "sleuth-test-foo-bar"
+	request, err := http.NewRequest("GET", scheme+"://"+addr+"/", nil)
 	if err != nil {
 		t.Errorf("request instantiation failed: %s", err.Error())
 		return
 	}
-	if _, err := client.Do(request, "sleuth-test-foo-bar"); err == nil {
+	if _, err := client.Do(request); err == nil {
 		t.Errorf("client request should return unknown service error")
+		return
+	}
+}
+
+func TestUnknownSchemeRequest(t *testing.T) {
+	// Create client.
+	client, err := New(nil, "")
+	if err != nil {
+		t.Errorf("client instantiation failed: %s", err.Error())
+		return
+	}
+	defer func(client *Client) {
+		if err := client.Close(); err != nil {
+			t.Errorf("client close failed: %s", err.Error())
+		}
+	}(client)
+	request, err := http.NewRequest("GET", "foo://bar/", nil)
+	if err != nil {
+		t.Errorf("request instantiation failed: %s", err.Error())
+		return
+	}
+	if _, err := client.Do(request); err == nil {
+		t.Errorf("client request should return unknown scheme error")
 		return
 	}
 }
@@ -221,7 +247,8 @@ func TestSimultaneousPosts(t *testing.T) {
 		}
 	}(client)
 	// Wait until the server has been added to the client pool.
-	client.WaitFor("sleuth-test-server-five")
+	addr := "sleuth-test-server-five"
+	client.WaitFor(addr)
 	requests := 2
 	body := "foo bar baz"
 	done := make(chan struct{})
@@ -230,12 +257,12 @@ func TestSimultaneousPosts(t *testing.T) {
 		go func(t *testing.T, client *Client, done chan struct{}) {
 			defer func() { done <- struct{}{} }()
 			buffer := bytes.NewBuffer([]byte(body))
-			request, err := http.NewRequest("POST", "/", buffer)
+			request, err := http.NewRequest("POST", scheme+"://"+addr+"/", buffer)
 			if err != nil {
 				t.Errorf("request instantiation failed: %s", err.Error())
 				return
 			}
-			response, err := client.Do(request, "sleuth-test-server-five")
+			response, err := client.Do(request)
 			if err != nil {
 				t.Errorf("client request failed: %s", err.Error())
 				return
@@ -295,7 +322,7 @@ func TestAddBadGroupMember(t *testing.T) {
 	service := ""
 	version := ""
 	if err := client.add(group, name, node, service, version); err == nil {
-		t.Errorf("expected bad group member to not be added")
+		t.Errorf("expected bad group member addition to fail")
 	}
 }
 

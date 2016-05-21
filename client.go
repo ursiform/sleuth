@@ -42,7 +42,7 @@ type Client struct {
 
 func (client *Client) add(groupID, name, node, service, version string) error {
 	if groupID != group {
-		client.log.Debug("sleuth: add - no group header for %s, client-only", name)
+		client.log.Debug("sleuth: no group header for %s, client-only", name)
 		return nil
 	}
 	peer := &Peer{Name: name}
@@ -103,8 +103,15 @@ func (client *Client) dispatch(payload []byte) error {
 }
 
 // Do sends an HTTP request to a service and returns and HTTP response.
-func (client *Client) Do(req *http.Request, to string) (*http.Response, error) {
+func (client *Client) Do(req *http.Request) (*http.Response, error) {
 	handle := uuid.New()
+	to := req.URL.Host
+	if req.URL.Scheme != scheme {
+		err := fmt.Errorf("sleuth: URL scheme must be \"%s\" in %s (%d)",
+			scheme, req.URL.String(), errUnsupportedScheme)
+		client.log.Error(err.Error())
+		return nil, err
+	}
 	services, ok := client.services[to]
 	if !ok {
 		return nil, fmt.Errorf("sleuth: %s is an unknown service (%d)",
@@ -116,8 +123,8 @@ func (client *Client) Do(req *http.Request, to string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	client.log.Debug("sleuth: Do - request {%s@%s}%s",
-		to, peer.Name, req.URL.String())
+	client.log.Debug("sleuth: %s %s://%s@%s%s",
+		req.Method, scheme, to, peer.Name, req.URL.String())
 	if err = client.node.Whisper(peer.Node, payload); err != nil {
 		return nil, err
 	}

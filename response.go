@@ -12,10 +12,10 @@ import (
 )
 
 type response struct {
-	Body   []byte      `json:"a"`
-	Code   int         `json:"b"`
-	Handle string      `json:"c"`
-	Header http.Header `json:"d"`
+	Body   []byte      `json:"body"`
+	Code   int         `json:"code"`
+	Handle string      `json:"handle"`
+	Header http.Header `json:"header"`
 }
 
 type body struct {
