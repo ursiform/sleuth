@@ -37,7 +37,7 @@ type Client struct {
 	Timeout   time.Duration
 	waiters   *waiterChannels
 	directory map[string]string          // map[node-name]service-type
-	services  map[string]*serviceWorkers // map[service-name]service-workers
+	services  map[string]*serviceWorkers // map[service-type]service-workers
 }
 
 func (client *Client) add(groupID, name, node, service, version string) error {
