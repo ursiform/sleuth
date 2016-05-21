@@ -15,12 +15,12 @@ const (
 	errStart             = 902
 	errJoin              = 903
 	errInterface         = 904
-	errSetPort           = 905
+	errPort              = 905
 	errNodeHeader        = 906
 	errServiceHeader     = 907
 	errVersionHeader     = 908
 	errGroupHeader       = 909
-	errSetVerbose        = 910
+	errVerbose           = 910
 	errReply             = 911
 	errDispatchHeader    = 912
 	errDispatchAction    = 913

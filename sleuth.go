@@ -23,11 +23,17 @@ import (
 var Debug = false
 
 var (
-	group  = "SLEUTH-v0"
-	port   = 5670
-	recv   = "RECV"
-	repl   = "REPL"
-	scheme = "sleuth"
+	group          = "SLEUTH-v0"
+	port           = 5670
+	recv           = "RECV"
+	repl           = "REPL"
+	scheme         = "sleuth"
+	serviceHeaders = [...]string{"group", "node", "type", "version"}
+	headerErrors   = [...]int{
+		errGroupHeader,
+		errNodeHeader,
+		errServiceHeader,
+		errVersionHeader}
 )
 
 type connection struct {
@@ -87,7 +93,7 @@ func newNode(out *logger.Logger, conn *connection) (*gyre.Gyre, error) {
 		return nil, failure(out, err.Error(), errInitialize)
 	}
 	if err := node.SetPort(conn.port); err != nil {
-		return nil, failure(out, err.Error(), errSetPort)
+		return nil, failure(out, err.Error(), errPort)
 	}
 	if len(conn.adapter) > 0 {
 		if err := node.SetInterface(conn.adapter); err != nil {
@@ -96,22 +102,16 @@ func newNode(out *logger.Logger, conn *connection) (*gyre.Gyre, error) {
 	}
 	if Debug {
 		if err := node.SetVerbose(); err != nil {
-			return nil, failure(out, err.Error(), errSetVerbose)
+			return nil, failure(out, err.Error(), errVerbose)
 		}
 	}
 	// If announcing a service, add service headers.
 	if conn.server {
-		if err := node.SetHeader("group", group); err != nil {
-			return nil, failure(out, err.Error(), errGroupHeader)
-		}
-		if err := node.SetHeader("node", node.UUID()); err != nil {
-			return nil, failure(out, err.Error(), errNodeHeader)
-		}
-		if err := node.SetHeader("type", conn.name); err != nil {
-			return nil, failure(out, err.Error(), errServiceHeader)
-		}
-		if err := node.SetHeader("version", conn.version); err != nil {
-			return nil, failure(out, err.Error(), errVersionHeader)
+		values := [...]string{group, node.UUID(), conn.name, conn.version}
+		for i, header := range serviceHeaders {
+			if err := node.SetHeader(header, values[i]); err != nil {
+				return nil, failure(out, err.Error(), headerErrors[i])
+			}
 		}
 	}
 	if err := node.Start(); err != nil {
