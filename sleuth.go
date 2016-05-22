@@ -11,7 +11,6 @@
 package sleuth
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -86,7 +85,7 @@ func announce(conn *connection, log *logger.Logger, result chan *instance) {
 func failure(log *logger.Logger, message string, code int) error {
 	text := fmt.Sprintf("sleuth: %s (%d)", message, code)
 	log.Error(text)
-	return errors.New(text)
+	return fmt.Errorf(text)
 }
 
 func newNode(log *logger.Logger, conn *connection) (*gyre.Gyre, error) {
