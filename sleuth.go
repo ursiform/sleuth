@@ -76,7 +76,9 @@ func announce(conn *connection, log *logger.Logger, result chan *instance) {
 			name := event.Name()
 			client.remove(name)
 		case gyre.EventWhisper:
-			client.dispatch(event.Msg())
+			if err := client.dispatch(event.Msg()); err != nil {
+				log.Error(err.Error())
+			}
 		}
 	}
 }

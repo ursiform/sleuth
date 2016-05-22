@@ -21,13 +21,13 @@ const (
 	errVersionHeader     = 908
 	errGroupHeader       = 909
 	errVerbose           = 910
-	errReply             = 911
+	errREPL              = 911
 	errDispatchHeader    = 912
 	errDispatchAction    = 913
 	errUnsupportedScheme = 914
 	errUnknownService    = 915
 	errTimeout           = 916
-	errReceiveUnmarshal  = 917
-	errReceiveHandle     = 918
+	errRECVUnmarshal     = 917
+	errRECVHandle        = 918
 	errLogLevel          = 919
 )

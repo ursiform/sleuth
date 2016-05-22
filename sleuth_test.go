@@ -344,7 +344,7 @@ func TestDispatchEmptyPayload(t *testing.T) {
 	}
 }
 
-func TestDispatchBadDispatchAction(t *testing.T) {
+func TestDispatchBadAction(t *testing.T) {
 	// Create client.
 	client, err := New(nil, "")
 	if err != nil {
@@ -387,5 +387,23 @@ func TestNextNonExistentServiceWorker(t *testing.T) {
 	p := w.next()
 	if p != nil {
 		t.Error("expected nonexistent service worker to be nil")
+	}
+}
+
+func TestReceiveBadPayload(t *testing.T) {
+	// Create client.
+	client, err := New(nil, "")
+	if err != nil {
+		t.Errorf("client instantiation failed: %s", err.Error())
+		return
+	}
+	defer func(client *Client) {
+		if err := client.Close(); err != nil {
+			t.Errorf("client close failed: %s", err.Error())
+		}
+	}(client)
+	payload := []byte("")
+	if err := client.receive(payload); err == nil {
+		t.Errorf("expected bad payload to fail")
 	}
 }

@@ -92,11 +92,9 @@ func (c *Client) dispatch(payload []byte) error {
 	action := string(payload[groupLength : groupLength+dispatchLength])
 	switch action {
 	case recv:
-		c.receive(payload[headerLength:])
-		return nil
+		return c.receive(payload[headerLength:])
 	case repl:
-		c.reply(payload[headerLength:])
-		return nil
+		return c.reply(payload[headerLength:])
 	default:
 		return fmt.Errorf("sleuth: bad action: %s (%d)", action, errDispatchAction)
 	}
@@ -151,11 +149,10 @@ func (c *Client) listen(handle string, listener chan *http.Response) {
 	go c.timeout(handle)
 }
 
-func (c *Client) receive(payload []byte) {
+func (c *Client) receive(payload []byte) error {
 	handle, res, err := unmarshalResponse(payload)
 	if err != nil {
-		c.log.Error("sleuth: %s (%d)", err.Error(), errReceiveUnmarshal)
-		return
+		return fmt.Errorf("sleuth: %s (%d)", err.Error(), errRECVUnmarshal)
 	}
 	c.listeners.Lock()
 	defer c.listeners.Unlock()
@@ -163,8 +160,10 @@ func (c *Client) receive(payload []byte) {
 		listener <- res
 		delete(c.listeners.handles, handle)
 	} else {
-		c.log.Error("sleuth: unknown handle %s (%d)", handle, errReceiveHandle)
+		return fmt.Errorf("sleuth: unknown handle %s (%d)",
+			handle, errRECVHandle)
 	}
+	return nil
 }
 
 func (c *Client) remove(name string) {
@@ -178,14 +177,12 @@ func (c *Client) remove(name string) {
 	}
 }
 
-// reply fails silently because a request that cannot be unmarshalled may
-// have not even originated from a compliant client and even if it did, it
-// will time out and return an error to the client.
-func (c *Client) reply(payload []byte) {
+func (c *Client) reply(payload []byte) error {
 	if dest, req, err := unmarshalRequest(payload); err != nil {
-		c.log.Error("sleuth: %s (%d)", err.Error(), errReply)
+		return fmt.Errorf("sleuth: %s (%d)", err.Error(), errREPL)
 	} else {
 		c.handler.ServeHTTP(newResponseWriter(c.node, dest), req)
+		return nil
 	}
 }
 
