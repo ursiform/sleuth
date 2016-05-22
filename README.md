@@ -30,7 +30,7 @@ go get -u github.com/ursiform/sleuth
 
 **Q**: What is the messaging protocol `sleuth` uses?
 
-**A**: Under the hood, `sleuth` marshals HTTP requests and responses into plain JSON objects and then compresses them via `gzip`. Instead of adding another dependency on something like Protocol buffers, `sleuth` depends on the fact that most API responses between microservices will be fairly small and it leaves the door open to ports in a wide variety of languages and languages.
+**A**: Under the hood, `sleuth` marshals HTTP requests and responses into plain JSON objects and then compresses them via `gzip`. Instead of adding another dependency on something like Protocol Buffers, `sleuth` depends on the fact that most API responses between microservices will be fairly small and it leaves the door open to ports in a wide variety of languages and environments. One hard dependency seemed quite enough.
 
 **Q**: Why is it called `sleuth`?
 
