@@ -39,7 +39,7 @@ go get -u github.com/ursiform/sleuth
 ## License
 `sleuth` is licensed under the [MIT License](LICENSE).
 
-The underlying libraries that `sleuth` relies on, [`Gyre`](https://github.com/zeromq/gyre) and [`libzmq`](https://github.com/zeromq/libzmq), are licensed under the [LGPL](http://www.gnu.org/licenses/lgpl-3.0.en.html). In effect users who do not plan on modifying `Gyre` or `libzmq` can release their own applications under any license they see fit.
+The underlying libraries that `sleuth` relies on, [`Gyre`](https://github.com/zeromq/gyre) and [`libzmq`](https://github.com/zeromq/libzmq), are licensed under the [LGPL](http://www.gnu.org/licenses/lgpl-3.0.en.html). In effect, users who do not plan on modifying `Gyre` or `libzmq` can release their own applications under any license they see fit.
 
 ## Resources
 
