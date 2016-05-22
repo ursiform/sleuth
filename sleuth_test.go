@@ -361,3 +361,15 @@ func TestDispatchBadDispatchAction(t *testing.T) {
 		t.Errorf("expected bad dispatch action to fail")
 	}
 }
+
+func TestAddDuplicateServiceWorker(t *testing.T) {
+	w := newWorkers()
+	p := new(peer)
+	p.Name = "test"
+	p.Node = "test-node"
+	p.Service = "test-service"
+	length := w.add(p)
+	if length != w.add(p) {
+		t.Error("expected duplicate addition to be ignored")
+	}
+}
