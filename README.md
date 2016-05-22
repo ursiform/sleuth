@@ -15,7 +15,7 @@ primary use case is for microservices on the same network that make calls to
 one another.
 
 ## Installation
-`sleuth` is dependent on [`libzmq`](https://github.com/zeromq/libzmq). It can be installed either from source or from binaries. For more information, please refer to [ØMQ: "Get the Software"](http://zeromq.org/intro:get-the-software).
+`sleuth` is dependent on [`libzmq`](https://github.com/zeromq/libzmq), which can be installed either from source or from binaries. For more information, please refer to [ØMQ: "Get the Software"](http://zeromq.org/intro:get-the-software).
 
 Once `libzmq` is available on a system, `sleuth` can be installed like any other Go library:
 
