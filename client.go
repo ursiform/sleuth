@@ -105,7 +105,7 @@ func (client *Client) dispatch(payload []byte) error {
 // Do sends an HTTP request to a service and returns and HTTP response. The URL
 // for requests needs to use the following format:
 //	sleuth://service-name/requested-path
-// For example, a request to /users?foo=bar endpoint of a service called
+// For example, a request to the path /users?foo=bar of a service called
 // user-service would have the URL:
 // 	sleuth://user-service/users?foo=bar
 func (client *Client) Do(req *http.Request) (*http.Response, error) {
