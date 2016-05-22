@@ -102,7 +102,12 @@ func (client *Client) dispatch(payload []byte) error {
 	}
 }
 
-// Do sends an HTTP request to a service and returns and HTTP response.
+// Do sends an HTTP request to a service and returns and HTTP response. The URL
+// for requests needs to use the following format:
+// sleuth://service-name/requested-path
+// For example, a request to the /users endpoint of a registered user-service
+// would have the URL:
+// sleuth://user-service/users
 func (client *Client) Do(req *http.Request) (*http.Response, error) {
 	handle := uuid.New()
 	to := req.URL.Host
