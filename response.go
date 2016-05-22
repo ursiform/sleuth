@@ -27,15 +27,19 @@ func (*body) Close() error { return nil }
 func marshalResponse(res *response) []byte {
 	// This will never fail to marshal, so error can be ignored.
 	marshalled, _ := json.Marshal(res)
-	return append([]byte(group+recv), marshalled...)
+	return append([]byte(group+recv), zip(marshalled)...)
 }
 
 func unmarshalResponse(payload []byte) (string, *http.Response, error) {
 	var handle string
 	var res *http.Response
+	unzipped, err := unzip(payload)
+	if err != nil {
+		return handle, res, err
+	}
 	in := new(response)
 	in.Header = http.Header(make(map[string][]string))
-	if err := json.Unmarshal(payload, in); err != nil {
+	if err = json.Unmarshal(unzipped, in); err != nil {
 		return handle, res, err
 	}
 	handle = in.Handle

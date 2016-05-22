@@ -43,13 +43,17 @@ func marshalRequest(receiver, handle string, in *http.Request) ([]byte, error) {
 	if marshalled, err := json.Marshal(out); err != nil {
 		return nil, err
 	} else {
-		return append([]byte(group+repl), marshalled...), nil
+		return append([]byte(group+repl), zip(marshalled)...), nil
 	}
 }
 
 func unmarshalRequest(payload []byte) (*destination, *http.Request, error) {
+	unzipped, err := unzip(payload)
+	if err != nil {
+		return nil, nil, err
+	}
 	in := new(request)
-	if err := json.Unmarshal(payload, in); err != nil {
+	if err = json.Unmarshal(unzipped, in); err != nil {
 		return nil, nil, err
 	}
 	out, err := http.NewRequest(in.Method, in.URL, bytes.NewBuffer(in.Body))
