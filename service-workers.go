@@ -9,59 +9,59 @@ import "sync"
 type serviceWorkers struct {
 	*sync.Mutex
 	current int
-	list    []*Peer
+	list    []*peer
 }
 
-func (workers *serviceWorkers) add(peer *Peer) int {
-	workers.Mutex.Lock()
-	defer workers.Mutex.Unlock()
-	for _, service := range workers.list {
-		if service.Name == peer.Name {
-			return len(workers.list)
+func (w *serviceWorkers) add(p *peer) int {
+	w.Mutex.Lock()
+	defer w.Mutex.Unlock()
+	for _, service := range w.list {
+		if service.Name == p.Name {
+			return len(w.list)
 		}
 	}
-	workers.list = append(workers.list, peer)
-	return len(workers.list)
+	w.list = append(w.list, p)
+	return len(w.list)
 }
 
-func (workers *serviceWorkers) available() bool {
-	workers.Mutex.Lock()
-	defer workers.Mutex.Unlock()
-	return len(workers.list) > 0
+func (w *serviceWorkers) available() bool {
+	w.Mutex.Lock()
+	defer w.Mutex.Unlock()
+	return len(w.list) > 0
 }
 
-func (workers *serviceWorkers) next() *Peer {
-	workers.Mutex.Lock()
-	defer workers.Mutex.Unlock()
-	length := len(workers.list)
-	current := workers.current
+func (w *serviceWorkers) next() *peer {
+	w.Mutex.Lock()
+	defer w.Mutex.Unlock()
+	length := len(w.list)
+	current := w.current
 	if length == 0 {
 		return nil
 	}
 	if current < length {
-		workers.current++
-		return workers.list[current]
+		w.current++
+		return w.list[current]
 	}
-	workers.current = 1
-	return workers.list[0]
+	w.current = 1
+	return w.list[0]
 }
 
-func (workers *serviceWorkers) remove(name string) (int, *Peer) {
-	workers.Mutex.Lock()
-	defer workers.Mutex.Unlock()
-	for index, peer := range workers.list {
-		if peer.Name == name {
-			list := workers.list
-			workers.list = append(list[0:index], list[index+1:len(list)]...)
-			return len(workers.list), peer
+func (w *serviceWorkers) remove(name string) (int, *peer) {
+	w.Mutex.Lock()
+	defer w.Mutex.Unlock()
+	for i, p := range w.list {
+		if p.Name == name {
+			list := w.list
+			w.list = append(list[0:i], list[i+1:len(list)]...)
+			return len(w.list), p
 		}
 	}
-	return len(workers.list), nil
+	return len(w.list), nil
 }
 
 func newWorkers() *serviceWorkers {
-	workers := &serviceWorkers{}
-	workers.Mutex = new(sync.Mutex)
-	workers.list = make([]*Peer, 0)
-	return workers
+	w := &serviceWorkers{}
+	w.Mutex = new(sync.Mutex)
+	w.list = make([]*peer, 0)
+	return w
 }

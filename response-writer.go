@@ -17,37 +17,37 @@ type responseWriter struct {
 	peer   string
 }
 
-func (res *responseWriter) Header() http.Header {
-	return res.output.Header
+func (r *responseWriter) Header() http.Header {
+	return r.output.Header
 }
 
-func (res *responseWriter) Write(data []byte) (int, error) {
-	if res.output.Code == 0 {
-		res.WriteHeader(http.StatusOK)
+func (r *responseWriter) Write(data []byte) (int, error) {
+	if r.output.Code == 0 {
+		r.WriteHeader(http.StatusOK)
 	}
-	header := res.Header()
+	header := r.Header()
 	if len(header.Get("Content-Type")) == 0 {
 		header.Add("Content-Type", http.DetectContentType(data[:512]))
 	}
-	res.output.Body = data
-	payload := marshalResponse(res.output)
-	if err := res.node.Whisper(res.peer, payload); err != nil {
+	r.output.Body = data
+	payload := marshalResponse(r.output)
+	if err := r.node.Whisper(r.peer, payload); err != nil {
 		return 0, err
 	} else {
 		return len(data), nil
 	}
 }
 
-func (res *responseWriter) WriteHeader(code int) {
-	res.output.Code = code
+func (r *responseWriter) WriteHeader(code int) {
+	r.output.Code = code
 }
 
 func newResponseWriter(node *gyre.Gyre, dest *destination) *responseWriter {
-	res := new(responseWriter)
-	res.node = node
-	res.output = new(response)
-	res.output.Handle = dest.handle
-	res.output.Header = http.Header(make(map[string][]string))
-	res.peer = dest.node
-	return res
+	r := new(responseWriter)
+	r.node = node
+	r.output = new(response)
+	r.output.Handle = dest.handle
+	r.output.Header = http.Header(make(map[string][]string))
+	r.peer = dest.node
+	return r
 }
