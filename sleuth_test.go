@@ -373,3 +373,19 @@ func TestAddDuplicateServiceWorker(t *testing.T) {
 		t.Error("expected duplicate addition to be ignored")
 	}
 }
+
+func TestRemoveNonExistentServiceWorker(t *testing.T) {
+	w := newWorkers()
+	_, p := w.remove("test")
+	if p != nil {
+		t.Error("expected nonexistent service worker removal to return nil")
+	}
+}
+
+func TestNextNonExistentServiceWorker(t *testing.T) {
+	w := newWorkers()
+	p := w.next()
+	if p != nil {
+		t.Error("expected nonexistent service worker to be nil")
+	}
+}

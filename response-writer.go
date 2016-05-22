@@ -27,7 +27,7 @@ func (r *responseWriter) Write(data []byte) (int, error) {
 	}
 	header := r.Header()
 	if len(header.Get("Content-Type")) == 0 {
-		header.Add("Content-Type", http.DetectContentType(data[:512]))
+		header.Add("Content-Type", http.DetectContentType(data))
 	}
 	r.output.Body = data
 	payload := marshalResponse(r.output)
