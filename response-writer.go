@@ -33,9 +33,8 @@ func (r *responseWriter) Write(data []byte) (int, error) {
 	payload := marshalResponse(r.output)
 	if err := r.node.Whisper(r.peer, payload); err != nil {
 		return 0, err
-	} else {
-		return len(data), nil
 	}
+	return len(data), nil
 }
 
 func (r *responseWriter) WriteHeader(code int) {

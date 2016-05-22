@@ -52,7 +52,7 @@ func (w *serviceWorkers) remove(name string) (int, *peer) {
 	for i, p := range w.list {
 		if p.Name == name {
 			list := w.list
-			w.list = append(list[0:i], list[i+1:len(list)]...)
+			w.list = append(list[0:i], list[i+1:]...)
 			return len(w.list), p
 		}
 	}

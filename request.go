@@ -40,11 +40,11 @@ func marshalRequest(receiver, handle string, in *http.Request) ([]byte, error) {
 	out.URL = in.URL.String()
 	out.Receiver = receiver
 	out.Handle = handle
-	if marshalled, err := json.Marshal(out); err != nil {
+	marshalled, err := json.Marshal(out)
+	if err != nil {
 		return nil, err
-	} else {
-		return append([]byte(group+repl), zip(marshalled)...), nil
 	}
+	return append([]byte(group+repl), zip(marshalled)...), nil
 }
 
 func unmarshalRequest(payload []byte) (*destination, *http.Request, error) {

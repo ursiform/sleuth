@@ -276,7 +276,7 @@ func TestSimultaneousPosts(t *testing.T) {
 			}
 		}(t, client, done)
 	}
-	for _ = range done {
+	for range done {
 		if total++; total == requests {
 			return
 		}

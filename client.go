@@ -136,10 +136,9 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	response := <-listener
 	if response != nil {
 		return response, nil
-	} else {
-		return nil, fmt.Errorf("sleuth: %s {%s}%s timed out (%d)",
-			req.Method, to, req.URL.String(), errTimeout)
 	}
+	return nil, fmt.Errorf("sleuth: %s {%s}%s timed out (%d)",
+		req.Method, to, req.URL.String(), errTimeout)
 }
 
 func (c *Client) listen(handle string, listener chan *http.Response) {
@@ -178,12 +177,12 @@ func (c *Client) remove(name string) {
 }
 
 func (c *Client) reply(payload []byte) error {
-	if dest, req, err := unmarshalRequest(payload); err != nil {
+	dest, req, err := unmarshalRequest(payload)
+	if err != nil {
 		return fmt.Errorf("sleuth: %s (%d)", err.Error(), errREPL)
-	} else {
-		c.handler.ServeHTTP(newResponseWriter(c.node, dest), req)
-		return nil
 	}
+	c.handler.ServeHTTP(newResponseWriter(c.node, dest), req)
+	return nil
 }
 
 func (c *Client) timeout(handle string) {
@@ -206,7 +205,7 @@ func (c *Client) WaitFor(services ...string) {
 		verified[service] = false
 	}
 	total := len(verified)
-	for service, _ := range verified {
+	for service := range verified {
 		if workers, ok := c.services[service]; ok && workers.available() {
 			verified[service] = true
 			available += 1
