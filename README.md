@@ -17,7 +17,7 @@ one another.
 ## Installation
 `sleuth` is dependent on [`libzmq`](https://github.com/zeromq/libzmq). It can be installed either from source or from binaries. For more information, please refer to [ØMQ: "Get the Software"](http://zeromq.org/intro:get-the-software).
 
-Once `libzmq` is available on a system, `sleuth` can be installed like any other go library:
+Once `libzmq` is available on a system, `sleuth` can be installed like any other Go library:
 
 ```
 go get -u github.com/ursiform/sleuth
@@ -34,7 +34,7 @@ go get -u github.com/ursiform/sleuth
 
 **Q**: Why is it called `sleuth`?
 
-**A**: Because a "sleuth" is the collective noun for a group of bears, and the original reason for writing this library was to connect a group of [bear](https://github.com/ursiform/bear)/[forest](https://github.com/ursiform/forest) services. And also because a "sleuth" searches for things and discovers them.
+**A**: Because "sleuth" is the collective noun for a group of bears: the original reason for writing this library was to connect a group of [bear](https://github.com/ursiform/bear)/[forest](https://github.com/ursiform/forest) services. Also because a sleuth searches for things and discovers them.
 
 ## License
 `sleuth` is licensed under the [MIT License](LICENSE).
