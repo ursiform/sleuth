@@ -35,12 +35,12 @@ func unmarshalResponse(payload []byte) (string, *http.Response, error) {
 	var res *http.Response
 	unzipped, err := unzip(payload)
 	if err != nil {
-		return handle, res, err
+		return handle, res, err.(*Error).escalate(errResUnmarshal)
 	}
 	in := new(response)
 	in.Header = http.Header(make(map[string][]string))
 	if err = json.Unmarshal(unzipped, in); err != nil {
-		return handle, res, err
+		return handle, res, newError(errResUnmarshalJSON, err.Error())
 	}
 	handle = in.Handle
 	res = new(http.Response)

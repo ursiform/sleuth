@@ -5,7 +5,6 @@
 package sleuth
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -20,22 +19,24 @@ type listenerHandles struct {
 	handles map[string]chan *http.Response
 }
 
-type waiterChannels struct {
+type waitChannel struct {
 	*sync.Mutex
-	additions chan *peer
+	notify chan *peer
 }
 
 // Client is the peer on the sleuth network that makes requests and, if a
 // handler has been provided, responds to peer requests.
 type Client struct {
-	handler   http.Handler
-	node      *gyre.Gyre
-	listeners *listenerHandles
-	log       *logger.Logger
 	// Timeout is the duration to wait before an outstanding request times out.
 	// By default, it is set to 500ms.
-	Timeout   time.Duration
-	waiters   *waiterChannels
+	Timeout time.Duration
+
+	additions *waitChannel
+	handler   http.Handler
+	listeners *listenerHandles
+	log       *logger.Logger
+	node      *gyre.Gyre
+
 	directory map[string]string          // map[node-name]service-type
 	services  map[string]*serviceWorkers // map[service-type]service-workers
 }
@@ -45,22 +46,23 @@ func (c *Client) add(gid, name, node, service, version string) error {
 		c.log.Debug("sleuth: no group header for %s, client-only", name)
 		return nil
 	}
-	p := &peer{Name: name}
 	// Node and service are required. Version is optional.
 	if len(node) == 0 || len(service) == 0 {
-		return fmt.Errorf("sleuth: failed to add %s node?=%t, type?=%t (%d)",
-			name, len(node) > 0, len(service) > 0, warnAdd)
+		return newError(errAdd, "failed to add %s node?=%t, type?=%t",
+			name, len(node) > 0, len(service) > 0)
 	}
-	p.Node = node
-	p.Service = service
-	p.Version = version
+	// Associate the node name with its service in the directory.
 	c.directory[name] = service
+	// Create a service workers collection if necessary.
 	if c.services[service] == nil {
 		c.services[service] = newWorkers()
 	}
+	// Add peer to the service workers.
+	p := &peer{Name: name, Node: node, Service: service, Version: version}
 	c.services[service].add(p)
-	if c.waiters.additions != nil {
-		c.waiters.additions <- p
+	// If necessary, notify the additions channel that a peer has been added.
+	if c.additions.notify != nil {
+		c.additions.notify <- p
 	}
 	c.log.Info("sleuth: add %s/%s %s to %s", service, version, name, group)
 	return nil
@@ -70,7 +72,7 @@ func (c *Client) add(gid, name, node, service, version string) error {
 func (c *Client) Close() error {
 	c.log.Info("%s leaving %s...", c.node.Name(), group)
 	if err := c.node.Leave(group); err != nil {
-		return err
+		return newError(errLeave, err.Error())
 	}
 	if err := c.node.Stop(); err != nil {
 		c.log.Warn("sleuth: %s %s (%d)",
@@ -87,7 +89,7 @@ func (c *Client) dispatch(payload []byte) error {
 	headerLength := groupLength + dispatchLength
 	// If the message header does not match the group, bail.
 	if len(payload) < headerLength || string(payload[0:groupLength]) != group {
-		return fmt.Errorf("sleuth: bad header (%d)", errDispatchHeader)
+		return newError(errDispatchHeader, "bad header")
 	}
 	action := string(payload[groupLength : groupLength+dispatchLength])
 	switch action {
@@ -96,29 +98,27 @@ func (c *Client) dispatch(payload []byte) error {
 	case repl:
 		return c.reply(payload[headerLength:])
 	default:
-		return fmt.Errorf("sleuth: bad action: %s (%d)", action, errDispatchAction)
+		return newError(errDispatchAction, "bad action: %s", action)
 	}
 }
 
 // Do sends an HTTP request to a service and returns and HTTP response. The URL
 // for requests needs to use the following format:
-//	sleuth://service-name/requested-path
-// For example, a request to the path /users?foo=bar of a service called
-// user-service would have the URL:
-// 	sleuth://user-service/users?foo=bar
+// 	sleuth://service-name/requested-path
+// For example, a request to the path /bar?baz=qux of a service called
+// foo-service would have the URL:
+// 	sleuth://foo-service/bar?baz=qux
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	handle := uuid.New()
 	to := req.URL.Host
 	if req.URL.Scheme != scheme {
-		err := fmt.Errorf("sleuth: URL scheme must be \"%s\" in %s (%d)",
-			scheme, req.URL.String(), errUnsupportedScheme)
-		c.log.Error(err.Error())
+		err := newError(errScheme,
+			"URL scheme must be \"%s\" in %s", scheme, req.URL.String())
 		return nil, err
 	}
 	services, ok := c.services[to]
 	if !ok {
-		return nil, fmt.Errorf("sleuth: %s is an unknown service (%d)",
-			to, errUnknownService)
+		return nil, newError(errUnknownService, "%s is an unknown service", to)
 	}
 	p := services.next()
 	receiver := c.node.UUID()
@@ -129,7 +129,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	c.log.Debug("sleuth: %s %s://%s@%s%s",
 		req.Method, scheme, to, p.Name, req.URL.String())
 	if err = c.node.Whisper(p.Node, payload); err != nil {
-		return nil, err
+		return nil, newError(errReqWhisper, err.Error())
 	}
 	listener := make(chan *http.Response, 1)
 	c.listen(handle, listener)
@@ -137,8 +137,8 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if response != nil {
 		return response, nil
 	}
-	return nil, fmt.Errorf("sleuth: %s {%s}%s timed out (%d)",
-		req.Method, to, req.URL.String(), errTimeout)
+	return nil, newError(errTimeout,
+		"%s {%s}%s timed out", req.Method, to, req.URL.String())
 }
 
 func (c *Client) listen(handle string, listener chan *http.Response) {
@@ -151,7 +151,7 @@ func (c *Client) listen(handle string, listener chan *http.Response) {
 func (c *Client) receive(payload []byte) error {
 	handle, res, err := unmarshalResponse(payload)
 	if err != nil {
-		return fmt.Errorf("sleuth: %s (%d)", err.Error(), errRECVUnmarshal)
+		return err.(*Error).escalate(errRECV)
 	}
 	c.listeners.Lock()
 	defer c.listeners.Unlock()
@@ -159,8 +159,7 @@ func (c *Client) receive(payload []byte) error {
 		listener <- res
 		delete(c.listeners.handles, handle)
 	} else {
-		return fmt.Errorf("sleuth: unknown handle %s (%d)",
-			handle, errRECVHandle)
+		return newError(errRECV, "unknown handle %s", handle)
 	}
 	return nil
 }
@@ -179,7 +178,7 @@ func (c *Client) remove(name string) {
 func (c *Client) reply(payload []byte) error {
 	dest, req, err := unmarshalRequest(payload)
 	if err != nil {
-		return fmt.Errorf("sleuth: %s (%d)", err.Error(), errREPL)
+		return err.(*Error).escalate(errREPL)
 	}
 	c.handler.ServeHTTP(newResponseWriter(c.node, dest), req)
 	return nil
@@ -197,8 +196,9 @@ func (c *Client) timeout(handle string) {
 
 // WaitFor blocks until the required services are available in the pool.
 func (c *Client) WaitFor(services ...string) {
-	c.waiters.Lock()
-	defer c.waiters.Unlock()
+	c.additions.Lock()
+	defer c.additions.Unlock()
+	// Check to see if required services are already registered.
 	verified := make(map[string]bool)
 	available := 0
 	for _, service := range services {
@@ -214,9 +214,10 @@ func (c *Client) WaitFor(services ...string) {
 	if available == total {
 		return
 	}
+	// If some required services are unavailable, block and wait until they are.
 	c.log.Blocked("sleuth: waiting for client to find services %s", services)
-	c.waiters.additions = make(chan *peer)
-	for p := range c.waiters.additions {
+	c.additions.notify = make(chan *peer)
+	for p := range c.additions.notify {
 		service := p.Service
 		if exists, ok := verified[service]; ok && !exists {
 			verified[service] = true
@@ -226,11 +227,12 @@ func (c *Client) WaitFor(services ...string) {
 			}
 		}
 	}
-	c.waiters.additions = nil
+	c.additions.notify = nil
 }
 
 func newClient(node *gyre.Gyre, out *logger.Logger) *Client {
 	return &Client{
+		additions: &waitChannel{Mutex: new(sync.Mutex)},
 		directory: make(map[string]string),
 		listeners: &listenerHandles{
 			new(sync.Mutex),
@@ -238,6 +240,5 @@ func newClient(node *gyre.Gyre, out *logger.Logger) *Client {
 		log:      out,
 		node:     node,
 		Timeout:  time.Millisecond * 500,
-		services: make(map[string]*serviceWorkers),
-		waiters:  &waiterChannels{Mutex: new(sync.Mutex)}}
+		services: make(map[string]*serviceWorkers)}
 }

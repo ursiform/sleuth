@@ -5,51 +5,51 @@
 package sleuth
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"net/http"
 
 	"github.com/ursiform/logger"
 )
 
-// ConfigFile is the default config file that sleuth will check for if no
-// other file location is passed into New.
-const ConfigFile = "bear.json"
+// Config is the configuration specification for sleuth client instantiation.
+// It has JSON tag values defined for all public fields except handler in order
+// to allow users to store sleuth configuration in JSON files. All fields are
+// optional, but in production settings, Interface is recommended, if known.
+type Config struct {
+	// Handler is the HTTP handler for a service made available via sleuth.
+	Handler http.Handler `json:"-"`
 
-type appConfig struct {
-	LogLevel     int
-	LogLevelName string         `json:"loglevel,omitempty"`
-	Service      *serviceConfig `json:"service,omitempty"`
-	Sleuth       *sleuthConfig  `json:"sleuth,omitempty"`
-}
-
-type serviceConfig struct {
-	Name    string `json:"name,omitempty"`
-	Version string `json:"version,omitempty"`
-}
-
-type sleuthConfig struct {
+	// Interface is the system network interface sleuth should use, i.e. "en0".
 	Interface string `json:"interface,omitempty"`
-	Port      int    `json:"port,omitempty"`
+
+	// LogLevel is the ursiform.Logger level for sleuth. The default is "listen".
+	LogLevel string `json:"loglevel,omitempty"`
+
+	// Port is the UDP port that sleuth should broadcast on. The default is 5670.
+	Port int `json:"port,omitempty"`
+
+	// Service is the name of the service being offered if a Handler exists.
+	Service string `json:"service,omitempty"`
+
+	// Version is the optional version string of the service being offered.
+	Version string `json:"version,omitempty"`
+
+	logLevel int
 }
 
-func loadConfig(file string) *appConfig {
-	appConfig := &appConfig{
-		Service: new(serviceConfig),
-		Sleuth:  new(sleuthConfig)}
-	if data, err := ioutil.ReadFile(file); err == nil {
-		_ = json.Unmarshal(data, appConfig)
+func initConfig(config *Config) *Config {
+	if config == nil {
+		config = new(Config)
 	}
-	if len(appConfig.LogLevelName) == 0 {
-		appConfig.LogLevelName = "listen"
+	if len(config.LogLevel) == 0 {
+		config.LogLevel = "listen"
 	}
-	level, ok := logger.LogLevel[appConfig.LogLevelName]
-	if !ok {
-		logger.MustError("loglevel=\"%s\" in %s is invalid; using \"%s\" (%d)",
-			appConfig.LogLevelName, file, "debug", errLogLevel)
-		appConfig.LogLevelName = "debug"
-		appConfig.LogLevel = logger.Debug
+	if level, ok := logger.LogLevel[config.LogLevel]; !ok {
+		logger.MustError("LogLevel=\"%s\" is invalid; using \"%s\" [%d]",
+			config.LogLevel, "debug", errLogLevel)
+		config.LogLevel = "debug"
+		config.logLevel = logger.Debug
 	} else {
-		appConfig.LogLevel = level
+		config.logLevel = level
 	}
-	return appConfig
+	return config
 }

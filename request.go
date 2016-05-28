@@ -42,7 +42,7 @@ func marshalRequest(receiver, handle string, in *http.Request) ([]byte, error) {
 	out.Handle = handle
 	marshalled, err := json.Marshal(out)
 	if err != nil {
-		return nil, err
+		return nil, newError(errReqMarshal, err.Error())
 	}
 	return append([]byte(group+repl), zip(marshalled)...), nil
 }
@@ -50,15 +50,15 @@ func marshalRequest(receiver, handle string, in *http.Request) ([]byte, error) {
 func unmarshalRequest(payload []byte) (*destination, *http.Request, error) {
 	unzipped, err := unzip(payload)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, err.(*Error).escalate(errReqUnmarshal)
 	}
 	in := new(request)
 	if err = json.Unmarshal(unzipped, in); err != nil {
-		return nil, nil, err
+		return nil, nil, newError(errReqUnmarshalJSON, err.Error())
 	}
 	out, err := http.NewRequest(in.Method, in.URL, bytes.NewBuffer(in.Body))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, newError(errReqUnmarshalHTTP, err.Error())
 	}
 	out.Header = http.Header(in.Header)
 	dest := new(destination)

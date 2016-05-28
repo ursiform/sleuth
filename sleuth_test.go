@@ -28,7 +28,7 @@ func (*silentHandler) ServeHTTP(http.ResponseWriter, *http.Request) {
 
 func TestRequestResponseCycle(t *testing.T) {
 	// Create client.
-	client, err := New(nil, "")
+	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -39,7 +39,9 @@ func TestRequestResponseCycle(t *testing.T) {
 		}
 	}(client)
 	// Create server.
-	server, err := New(http.FileServer(http.Dir(".")), "")
+	addr := "sleuth-test"
+	server, err := New(&Config{
+		Handler: http.FileServer(http.Dir(".")), Service: addr})
 	if err != nil {
 		t.Errorf("server instantiation failed: %s", err.Error())
 		return
@@ -50,9 +52,8 @@ func TestRequestResponseCycle(t *testing.T) {
 		}
 	}(server)
 	// Wait until the server has been added to the client pool.
-	addr := "sleuth-test"
 	client.WaitFor(addr)
-	request, err := http.NewRequest("GET", scheme+"://"+addr+"/"+ConfigFile, nil)
+	request, err := http.NewRequest("GET", scheme+"://"+addr+"/README.md", nil)
 	if err != nil {
 		t.Errorf("request instantiation failed: %s", err.Error())
 		return
@@ -70,7 +71,7 @@ func TestRequestResponseCycle(t *testing.T) {
 
 func TestLoadConfig(t *testing.T) {
 	// Create client.
-	client, err := New(nil, "test-data/client-1.json")
+	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -81,8 +82,9 @@ func TestLoadConfig(t *testing.T) {
 		}
 	}(client)
 	// Create server.
-	handler := http.FileServer(http.Dir("."))
-	server, err := New(handler, "test-data/server-1.json")
+	server, err := New(&Config{
+		Handler: http.FileServer(http.Dir(".")),
+		Service: "sleuth-test-server-one"})
 	if err != nil {
 		t.Errorf("server instantiation failed: %s", err.Error())
 		return
@@ -98,8 +100,8 @@ func TestLoadConfig(t *testing.T) {
 
 func TestBadConfig(t *testing.T) {
 	// Create server.
-	handler := http.FileServer(http.Dir("."))
-	_, err := New(handler, "test-data/server-2.json")
+	_, err := New(&Config{
+		Handler: http.FileServer(http.Dir("."))})
 	if err == nil {
 		t.Errorf("server instantiation should fail with bad config")
 		return
@@ -108,8 +110,8 @@ func TestBadConfig(t *testing.T) {
 
 func TestTimeout(t *testing.T) {
 	// Create server.
-	handler := new(silentHandler)
-	server, err := New(handler, "test-data/server-3.json")
+	addr := "sleuth-test-server-three"
+	server, err := New(&Config{Handler: new(silentHandler), Service: addr})
 	if err != nil {
 		t.Errorf("server instantiation failed: %s", err.Error())
 		return
@@ -120,7 +122,7 @@ func TestTimeout(t *testing.T) {
 		}
 	}(server)
 	// Create client.
-	client, err := New(nil, "")
+	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -134,7 +136,6 @@ func TestTimeout(t *testing.T) {
 	// If the server is ready, then WaitFor will not block.
 	<-time.After(2000 * time.Millisecond)
 	// Wait until the server has been added to the client pool.
-	addr := "sleuth-test-server-three"
 	client.WaitFor(addr)
 	request, err := http.NewRequest("GET", scheme+"://"+addr+"/", nil)
 	if err != nil {
@@ -150,7 +151,7 @@ func TestTimeout(t *testing.T) {
 
 func TestUnknownServiceRequest(t *testing.T) {
 	// Create client.
-	client, err := New(nil, "")
+	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -174,7 +175,7 @@ func TestUnknownServiceRequest(t *testing.T) {
 
 func TestUnknownSchemeRequest(t *testing.T) {
 	// Create client.
-	client, err := New(nil, "")
+	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -198,7 +199,7 @@ func TestUnknownSchemeRequest(t *testing.T) {
 func TestBadLogLevelInConfig(t *testing.T) {
 	// Create client. This test is for coverage as it only sets the log level
 	// to "debug" but does not change any functionality.
-	client, err := New(nil, "test-data/client-2.json")
+	client, err := New(&Config{LogLevel: "foo"})
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -213,8 +214,11 @@ func TestBadLogLevelInConfig(t *testing.T) {
 func TestBadServerInstantiation(t *testing.T) {
 	Debug = true
 	defer func() { Debug = false }()
-	handler := new(silentHandler)
-	if _, err := New(handler, "test-data/server-4.json"); err == nil {
+	_, err := New(&Config{
+		Handler: new(silentHandler),
+		Service: "sleuth-test-server-four",
+		Port:    80})
+	if err == nil {
 		t.Errorf("server instantiation with restricted port should fail")
 		return
 	}
@@ -222,8 +226,8 @@ func TestBadServerInstantiation(t *testing.T) {
 
 func TestSimultaneousPosts(t *testing.T) {
 	// Create server.
-	handler := new(repeatHandler)
-	server, err := New(handler, "test-data/server-5.json")
+	addr := "sleuth-test-server-five"
+	server, err := New(&Config{Handler: new(repeatHandler), Service: addr})
 	if err != nil {
 		t.Errorf("server instantiation failed: %s", err.Error())
 		return
@@ -234,9 +238,9 @@ func TestSimultaneousPosts(t *testing.T) {
 		}
 	}(server)
 	// Create client.
-	client, err := New(nil, "test-data/client-3.json")
-	// Set timeout to 1.5 seconds to accommodate slow test spin-up.
-	client.Timeout = time.Millisecond * 1500
+	client, err := New(nil)
+	// Set timeout to 10 seconds to accommodate slow test spin-up.
+	client.Timeout = time.Second * 10
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -247,7 +251,6 @@ func TestSimultaneousPosts(t *testing.T) {
 		}
 	}(client)
 	// Wait until the server has been added to the client pool.
-	addr := "sleuth-test-server-five"
 	client.WaitFor(addr)
 	requests := 2
 	body := "foo bar baz"
@@ -285,7 +288,7 @@ func TestSimultaneousPosts(t *testing.T) {
 
 func TestBadInterfaceInConfig(t *testing.T) {
 	// Create client.
-	if _, err := New(nil, "test-data/client-4.json"); err == nil {
+	if _, err := New(&Config{Interface: "foo"}); err == nil {
 		t.Errorf("client instantiation should have failed")
 		return
 	}
@@ -307,7 +310,7 @@ func TestBadRequestPayload(t *testing.T) {
 
 func TestAddBadGroupMember(t *testing.T) {
 	// Create client.
-	client, err := New(nil, "")
+	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -321,14 +324,15 @@ func TestAddBadGroupMember(t *testing.T) {
 	node := "bar"
 	service := ""
 	version := ""
-	if err := client.add(group, name, node, service, version); err == nil {
+	err = client.add(group, name, node, service, version)
+	if err == nil {
 		t.Errorf("expected bad group member addition to fail")
 	}
 }
 
 func TestDispatchEmptyPayload(t *testing.T) {
 	// Create client.
-	client, err := New(nil, "")
+	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -346,7 +350,7 @@ func TestDispatchEmptyPayload(t *testing.T) {
 
 func TestDispatchBadAction(t *testing.T) {
 	// Create client.
-	client, err := New(nil, "")
+	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -390,9 +394,9 @@ func TestNextNonExistentServiceWorker(t *testing.T) {
 	}
 }
 
-func TestReceiveBadPayload(t *testing.T) {
+func TestReceiveBadUnzipPayload(t *testing.T) {
 	// Create client.
-	client, err := New(nil, "")
+	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -404,6 +408,54 @@ func TestReceiveBadPayload(t *testing.T) {
 	}(client)
 	payload := []byte("")
 	if err := client.receive(payload); err == nil {
-		t.Errorf("expected bad payload to fail")
+		t.Errorf("expected bad payload to fail to unzip")
+	}
+}
+
+func TestReceiveBadHandlePayload(t *testing.T) {
+	// Create client.
+	client, err := New(nil)
+	if err != nil {
+		t.Errorf("client instantiation failed: %s", err.Error())
+		return
+	}
+	defer func(client *Client) {
+		if err := client.Close(); err != nil {
+			t.Errorf("client close failed: %s", err.Error())
+		}
+	}(client)
+	res := new(response)
+	res.Handle = "foo"
+	payload := marshalResponse(res)[len(group)+len(recv):]
+	if err := client.receive(payload); err == nil {
+		t.Errorf("expected bad payload to fail on handle check")
+	}
+}
+
+func TestReplyBadUnmarshalPayload(t *testing.T) {
+	// Create client.
+	client, err := New(nil)
+	if err != nil {
+		t.Errorf("client instantiation failed: %s", err.Error())
+		return
+	}
+	defer func(client *Client) {
+		if err := client.Close(); err != nil {
+			t.Errorf("client close failed: %s", err.Error())
+		}
+	}(client)
+	payload := []byte("")
+	if err := client.reply(payload); err == nil {
+		t.Errorf("expected bad payload to fail on unmarshal")
+	}
+}
+
+func TestError(t *testing.T) {
+	code := 1
+	message := "test"
+	want := "sleuth: test [1]"
+	err := newError(code, message)
+	if err.Error() != want {
+		t.Errorf("expected error to be formatted as: %s", want)
 	}
 }

@@ -1,10 +1,10 @@
 # sleuth
 
+![sleuth logo](logo.svg)
+
 [![Coverage Status](https://coveralls.io/repos/github/ursiform/sleuth/badge.svg?branch=master)](https://coveralls.io/github/ursiform/sleuth?branch=master)
 
 [![API documentation](https://godoc.org/github.com/ursiform/sleuth?status.svg)](https://godoc.org/github.com/ursiform/sleuth)
-
-**This is a work in progress and not intended for any sort of production use. If you want to experiment with the code, feel free.**
 
 
 `sleuth` is a Go library provides master-less peer-to-peer autodiscovery and RPC

@@ -22,8 +22,12 @@ func unzip(in []byte) ([]byte, error) {
 	var out []byte
 	reader, err := gzip.NewReader(bytes.NewBuffer(in))
 	if err != nil {
-		return out, err
+		return out, newError(errUnzip, err.Error())
 	}
 	reader.Close()
-	return ioutil.ReadAll(reader)
+	out, err = ioutil.ReadAll(reader)
+	if err != nil {
+		return out, newError(errUnzipRead, err.Error())
+	}
+	return out, nil
 }

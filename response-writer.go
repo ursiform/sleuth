@@ -32,7 +32,7 @@ func (r *responseWriter) Write(data []byte) (int, error) {
 	r.output.Body = data
 	payload := marshalResponse(r.output)
 	if err := r.node.Whisper(r.peer, payload); err != nil {
-		return 0, err
+		return 0, newError(errResWhisper, err.Error())
 	}
 	return len(data), nil
 }

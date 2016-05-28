@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" height="225" width="225" viewBox="0 0 225 225">
+  <!-- handle -->
+  <line x1="5" y1="220" x2="90" y2="135" stroke-width="12" stroke="#003660" />
+  <!-- #003660 backdrop circle -->
+  <circle cx="135" cy="90" r="70" fill="#003660" />
+  <!-- left ear -->
+  <circle cx="87" cy="33" r="25" stroke="#003660" stroke-width="6" fill="#0992FB" />
+  <!-- right ear -->
+  <circle cx="183" cy="33" r="25" stroke="#003660" stroke-width="6" fill="#0992FB" />
+  <!-- face circle -->
+  <circle cx="135" cy="90" r="64" fill="#0992FB" />
+  <!-- nose triangle -->
+  <polygon fill="#003660" points="135,115 123,100 148,100" />
+  <!-- mouth line vertical -->
+  <line x1="135" y1="110" x2="135" y2="125" stroke-width="2" stroke="#003660" />
+  <!-- mouth left curve -->
+  <path d="M115 125 C 125 128, 125 128, 135 125" stroke="#003660" stroke-width="1" fill="transparent"/>
+  <!-- mouth right curve -->
+  <path d="M135 125 C 145 128, 145 128, 155 125" stroke="#003660" stroke-width="1" fill="transparent"/>
+</svg>
