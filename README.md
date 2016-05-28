@@ -1,7 +1,7 @@
 # sleuth <img src="https://cdn.rawgit.com/ursiform/sleuth/master/logo.svg" height="50" valign="middle"> [![Coverage Status](https://coveralls.io/repos/github/ursiform/sleuth/badge.svg?branch=master)](https://coveralls.io/github/ursiform/sleuth?branch=master) [![API documentation](https://godoc.org/github.com/ursiform/sleuth?status.svg)](https://godoc.org/github.com/ursiform/sleuth)
 
 
-`sleuth` is a Go library provides master-less peer-to-peer autodiscovery and RPC
+`sleuth` is a Go library that provides master-less peer-to-peer autodiscovery and RPC
 between HTTP services that reside on the same network. It works with minimal
 configuration and provides a mechanism to join a local network both as a
 client that offers no services and as any service that speaks HTTP. Its
