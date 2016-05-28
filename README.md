@@ -1,10 +1,6 @@
 # sleuth
 
-![sleuth logo](logo.svg)
-
-[![Coverage Status](https://coveralls.io/repos/github/ursiform/sleuth/badge.svg?branch=master)](https://coveralls.io/github/ursiform/sleuth?branch=master)
-
-[![API documentation](https://godoc.org/github.com/ursiform/sleuth?status.svg)](https://godoc.org/github.com/ursiform/sleuth)
+<img src="https://cdn.rawgit.com/ursiform/sleuth/master/logo.svg" height="75" valign="middle"> [![Coverage Status](https://coveralls.io/repos/github/ursiform/sleuth/badge.svg?branch=master)](https://coveralls.io/github/ursiform/sleuth?branch=master) [![API documentation](https://godoc.org/github.com/ursiform/sleuth?status.svg)](https://godoc.org/github.com/ursiform/sleuth)
 
 
 `sleuth` is a Go library provides master-less peer-to-peer autodiscovery and RPC
