@@ -75,7 +75,7 @@ func (c *Client) Close() error {
 		return newError(errLeave, err.Error())
 	}
 	if err := c.node.Stop(); err != nil {
-		c.log.Warn("sleuth: %s %s (%d)",
+		c.log.Warn("sleuth: %s %s [%d]",
 			c.node.Name(), err.Error(), warnClose)
 	}
 	return nil

@@ -143,7 +143,7 @@ func New(config *Config) (*Client, error) {
 		log.Init("sleuth: config.Handler is nil, client-only mode")
 	}
 	if conn.adapter = config.Interface; len(conn.adapter) == 0 {
-		log.Warn("sleuth: config.Interface not defined (%d)", warnInterface)
+		log.Warn("sleuth: config.Interface not defined [%d]", warnInterface)
 	}
 	if conn.port = config.Port; conn.port == 0 {
 		conn.port = port
