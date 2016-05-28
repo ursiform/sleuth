@@ -28,7 +28,11 @@ go get -u github.com/ursiform/sleuth
 
 **Q**: Why is it called `sleuth`?
 
-**A**: Because "sleuth" is the collective noun for a group of bears: the original reason for writing this library was to connect a group of [bear](https://github.com/ursiform/bear)/[forest](https://github.com/ursiform/forest) services. Also because a sleuth searches for things and discovers them.
+**A**: Because "sleuth" is the collective noun for a group of bears: the original reason for writing this library was to connect a group of [bear](https://github.com/ursiform/bear)/[forest](https://github.com/ursiform/forest) services. Also because a sleuth searches for things and discovers them. Hence the logo:
+
+<p align="center">
+    <img src="https://cdn.rawgit.com/ursiform/sleuth/master/logo.svg">
+</p>
 
 ## License
 `sleuth` is licensed under the [MIT License](LICENSE).
