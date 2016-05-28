@@ -11,9 +11,9 @@ const (
 	warnInterface = 801
 	warnClose     = 802
 	// Errors are in the 900-999 range.
-	errCreate           = 900
-	errDispatch         = 901
-	errNew              = 902
+	errNew              = 900
+	errCreate           = 901
+	errDispatch         = 902
 	errService          = 903
 	errInitialize       = 904
 	errStart            = 905
