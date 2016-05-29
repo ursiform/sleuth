@@ -1,4 +1,4 @@
-# sleuth <img src="https://cdn.rawgit.com/ursiform/sleuth/master/logo.svg" height="50" valign="middle"> [![Coverage Status](https://coveralls.io/repos/github/ursiform/sleuth/badge.svg?branch=master)](https://coveralls.io/github/ursiform/sleuth?branch=master) [![API documentation](https://godoc.org/github.com/ursiform/sleuth?status.svg)](https://godoc.org/github.com/ursiform/sleuth)
+# sleuth <img src="https://cdn.rawgit.com/ursiform/sleuth/662e1c96d211b0d27c30fbfa043edc4b3bd6c35d/logo.svg" height="50" valign="middle"> [![Coverage Status](https://coveralls.io/repos/github/ursiform/sleuth/badge.svg?branch=master)](https://coveralls.io/github/ursiform/sleuth?branch=master) [![API documentation](https://godoc.org/github.com/ursiform/sleuth?status.svg)](https://godoc.org/github.com/ursiform/sleuth)
 
 
 `sleuth` is a Go library that provides master-less peer-to-peer autodiscovery and RPC
@@ -31,7 +31,7 @@ go get -u github.com/ursiform/sleuth
 **A**: Because "sleuth" is the collective noun for a group of bears: the original reason for writing this library was to connect a group of [bear](https://github.com/ursiform/bear)/[forest](https://github.com/ursiform/forest) services. Also because a sleuth searches for things and discovers them. Hence the logo:
 
 <p align="center">
-    <img src="https://cdn.rawgit.com/ursiform/sleuth/master/logo.svg">
+    <img src="https://cdn.rawgit.com/ursiform/sleuth/662e1c96d211b0d27c30fbfa043edc4b3bd6c35d/logo.svg">
 </p>
 
 ## License
