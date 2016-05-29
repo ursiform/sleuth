@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="225" width="225" viewBox="0 0 225 225">
+<svg xmlns="http://www.w3.org/2000/svg" height="205" width="200" viewBox="9 4 202 208">
   <!-- handle -->
-  <line x1="5" y1="220" x2="90" y2="135" stroke-width="12" stroke="#003660" />
+  <line x1="15" y1="205" x2="90" y2="135" stroke-width="15" stroke="#003660" />
   <!-- #003660 backdrop circle -->
   <circle cx="135" cy="90" r="70" fill="#003660" />
   <!-- left ear -->
