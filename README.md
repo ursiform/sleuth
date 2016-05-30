@@ -17,6 +17,9 @@ Once `libzmq` is available on a system, `sleuth` can be installed like any other
 go get -u github.com/ursiform/sleuth
 ```
 
+## Example
+[`sleuth-example` is a full example of two services on a `sleuth` network](https://github.com/afshin/sleuth-example/) that need to communicate with each other. A complete tutorial based on that example can be found here: [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/).
+
 ## Test
     go test -cover github.com/ursiform/sleuth
 
@@ -46,3 +49,4 @@ The underlying libraries that `sleuth` relies on, [`Gyre`](https://github.com/ze
 ## Resources
 
 * [API documentation](https://godoc.org/github.com/ursiform/sleuth)
+* [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/) (tutorial)
