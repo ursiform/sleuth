@@ -100,6 +100,10 @@ A complete tutorial based on that example can be found here: [Service autodiscov
 
 **A**: Under the hood, `sleuth` marshals HTTP requests and responses into plain JSON objects and then compresses them via `gzip`. Instead of adding another dependency on something like Protocol Buffers, `sleuth` depends on the fact that most API responses between microservices will be fairly small and it leaves the door open to ports in a wide variety of languages and environments. One hard dependency seemed quite enough.
 
+**Q**: What if I have multiple instances of the same service?
+
+**A**: Great! `sleuth` will automatically round-robin the requests each client makes to all services that share the same name.
+
 **Q**: It doesn't work.
 
 **A**: That's not a question. But have you checked to make sure your firewall allows `UDP` traffic on port `5670`?
