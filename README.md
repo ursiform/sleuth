@@ -18,7 +18,78 @@ go get -u github.com/ursiform/sleuth
 ```
 
 ## Example
-[`sleuth-example` is a full example of two services on a `sleuth` network](https://github.com/afshin/sleuth-example/) that need to communicate with each other. A complete tutorial based on that example can be found here: [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/).
+Here is an example of a toy service that has made itself available on a `sleuth` network:
+```go
+package main
+
+import (
+  "io/ioutil"
+  "net/http"
+
+  "github.com/ursiform/sleuth"
+)
+
+type echoHandler struct{}
+
+func (h *echoHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+  body, _ := ioutil.ReadAll(req.Body)
+  res.Write(body)
+}
+
+func main() {
+  handler := new(echoHandler)
+  config := &sleuth.Config{Handler: handler, Service: "echo-service"}
+  server, err := sleuth.New(config)
+  if err != nil {
+    panic(err.Error())
+  }
+  defer server.Close()
+  http.ListenAndServe(":9873", handler)
+}
+```
+
+And here is a trivial client that waits until it has connected to the network and found the `echo-service` to make a request before it exits:
+
+```go
+package main
+
+import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/ursiform/sleuth"
+)
+
+func main() {
+	service := "echo-service"
+	config := &sleuth.Config{LogLevel: "silent"}
+	client, err := sleuth.New(config)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer client.Close()
+	client.WaitFor(service)
+	input := "This is the value I am inputting."
+	body := bytes.NewBuffer([]byte(input))
+	request, _ := http.NewRequest("POST", "sleuth://"+service+"/", body)
+	response, err := client.Do(request)
+	if err != nil {
+		panic(err.Error())
+	}
+	output, _ := ioutil.ReadAll(response.Body)
+	if string(output) == input {
+		fmt.Println("It works.")
+	} else {
+		fmt.Println("It doesn't work.")
+	}
+}
+```
+
+Additionally, [`sleuth-example` is a fuller example of two services on a `sleuth` network](https://github.com/afshin/sleuth-example/) that need to communicate with each other.
+
+A complete tutorial based on that example can be found here: [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/).
 
 ## Test
     go test -cover github.com/ursiform/sleuth
