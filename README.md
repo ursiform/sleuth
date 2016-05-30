@@ -48,7 +48,7 @@ func main() {
 }
 ```
 
-And here is a trivial client that waits until it has connected to the network and found the `echo-service` to make a request before it exits:
+And here is a trivial client that waits until it has connected to the network and found the `echo-service` to make a request before it exits. Note that the `*sleuth.Client` works as a drop-in replacement for an `*http.Client` when making requests using the `Do` method:
 
 ```go
 package main
