@@ -38,6 +38,8 @@ func (h *echoHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 func main() {
   handler := new(echoHandler)
+  // In the real world, the Interface field of the sleuth.Config object
+  // should be set so that all services are on the same subnet.
   config := &sleuth.Config{Handler: handler, Service: "echo-service"}
   server, err := sleuth.New(config)
   if err != nil {
@@ -64,6 +66,8 @@ import (
 
 func main() {
 	service := "echo-service"
+	// In the real world, the Interface field of the sleuth.Config object
+	// should be set so that all services are on the same subnet.
 	config := &sleuth.Config{LogLevel: "silent"}
 	client, err := sleuth.New(config)
 	if err != nil {
