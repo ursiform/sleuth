@@ -18,7 +18,7 @@ type Config struct {
 	// Handler is the HTTP handler for a service made available via sleuth.
 	Handler http.Handler `json:"-"`
 
-	// Interface is the system network interface sleuth should use, i.e. "en0".
+	// Interface is the system network interface sleuth should use, e.g. "en0".
 	Interface string `json:"interface,omitempty"`
 
 	// LogLevel is the ursiform.Logger level for sleuth. The default is "listen".
