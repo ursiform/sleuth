@@ -108,6 +108,10 @@ A complete tutorial based on that example can be found here: [Service autodiscov
 
 **A**: That's not a question. But have you checked to make sure your firewall allows `UDP` traffic on port `5670`?
 
+**Q**: It still doesn't work.
+
+**A**: That's still not a question. But have you set the `Interface` field of your `sleuth.Config` object? The services you want to connect need to be on the same network and if you leave that field blank, the underlying `Gyre` network may not reside where you think it does. If you run `ifconfig` you'll get a list of available interfaces on your system.
+
 **Q**: Why is it called `sleuth`?
 
 **A**: Because "sleuth" is the collective noun for a group of bears: the original reason for writing this library was to connect a group of [bear](https://github.com/ursiform/bear)/[forest](https://github.com/ursiform/forest) services. Also because a sleuth searches for things and discovers them. Hence the logo:
