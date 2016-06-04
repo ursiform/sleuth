@@ -14,12 +14,12 @@ import (
 	"github.com/zeromq/gyre"
 )
 
-type listenerHandles struct {
+type listeners struct {
 	*sync.Mutex
 	handles map[string]chan *http.Response
 }
 
-type waitChannel struct {
+type notifier struct {
 	*sync.Mutex
 	notify chan struct{}
 }
@@ -31,9 +31,9 @@ type Client struct {
 	// By default, it is set to 500ms.
 	Timeout time.Duration
 
-	additions *waitChannel
+	additions *notifier
 	handler   http.Handler
-	listeners *listenerHandles
+	listeners *listeners
 	log       *logger.Logger
 	node      *gyre.Gyre
 
@@ -242,9 +242,9 @@ func (c *Client) WaitFor(services ...string) {
 
 func newClient(node *gyre.Gyre, out *logger.Logger) *Client {
 	return &Client{
-		additions: &waitChannel{Mutex: new(sync.Mutex)},
+		additions: &notifier{Mutex: new(sync.Mutex)},
 		directory: make(map[string]string),
-		listeners: &listenerHandles{
+		listeners: &listeners{
 			new(sync.Mutex),
 			make(map[string]chan *http.Response)},
 		log:      out,
