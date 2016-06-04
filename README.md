@@ -17,8 +17,8 @@ Once `libzmq` is available on a system, `sleuth` can be installed like any other
 go get -u github.com/ursiform/sleuth
 ```
 
-## Example
-Here is an example of a toy service that has made itself available on a `sleuth` network:
+## Examples
+**Example (1):** The `echo-service` is a toy service that merely echoes back anything in an HTTP request body. It has made itself available on a `sleuth` network:
 ```go
 package main
 
@@ -93,7 +93,7 @@ func main() {
 
 ---
 
-Additionally, [`sleuth-example` is a fuller example of two services on a `sleuth` network](https://github.com/afshin/sleuth-example/) that need to communicate with each other.
+**Example (2):**  [`sleuth-example` is a fuller example of two services on a `sleuth` network](https://github.com/afshin/sleuth-example/) that need to communicate with each other.
 
 A complete tutorial based on that example can be found here: [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/).
 
