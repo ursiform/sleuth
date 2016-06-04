@@ -372,9 +372,9 @@ func TestDispatchBadAction(t *testing.T) {
 func TestAddDuplicateServiceWorker(t *testing.T) {
 	w := newWorkers()
 	p := new(peer)
-	p.Name = "test"
-	p.Node = "test-node"
-	p.Service = "test-service"
+	p.name = "test"
+	p.node = "test-node"
+	p.service = "test-service"
 	length := w.add(p)
 	if length != w.add(p) {
 		t.Error("expected duplicate addition to be ignored")

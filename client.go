@@ -58,7 +58,7 @@ func (c *Client) add(gid, name, node, service, version string) error {
 		c.services[service] = newWorkers()
 	}
 	// Add peer to the service workers.
-	p := &peer{Name: name, Node: node, Service: service, Version: version}
+	p := &peer{name: name, node: node, service: service, version: version}
 	c.services[service].add(p)
 	// If necessary, notify the additions channel that a peer has been added.
 	if c.additions.notify != nil {
@@ -149,8 +149,8 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 	c.log.Debug("sleuth: %s %s://%s@%s%s",
-		req.Method, scheme, to, p.Name, req.URL.String())
-	if err = c.node.Whisper(p.Node, payload); err != nil {
+		req.Method, scheme, to, p.name, req.URL.String())
+	if err = c.node.Whisper(p.node, payload); err != nil {
 		return nil, newError(errReqWhisper, err.Error())
 	}
 	listener := make(chan *http.Response, 1)
