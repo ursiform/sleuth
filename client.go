@@ -68,7 +68,8 @@ func (c *Client) add(gid, name, node, service, version string) error {
 	return nil
 }
 
-func (c *Client) block(services ...string) {
+// Returns true if it had to block and false if it returns immediately.
+func (c *Client) block(services ...string) bool {
 	// Block until the required services are available in the pool.
 	c.additions.Lock()
 	defer c.additions.Unlock()
@@ -76,7 +77,7 @@ func (c *Client) block(services ...string) {
 	// the check is performed here in case there was a delay waiting for the
 	// additions mutex to become available.
 	if c.has(services...) {
-		return
+		return false
 	}
 	c.log.Blocked("sleuth: waiting for client to find services %s", services)
 	c.additions.notify = make(chan struct{})
@@ -86,6 +87,7 @@ func (c *Client) block(services ...string) {
 		}
 	}
 	c.additions.notify = nil
+	return true
 }
 
 // Close leaves the sleuth network and stops the Gyre/Zyre node.

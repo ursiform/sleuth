@@ -460,7 +460,7 @@ func TestError(t *testing.T) {
 	}
 }
 
-func TestWaitForServiceAppearsWhileWaiting(t *testing.T) {
+func TestBlockReturnImmediately(t *testing.T) {
 	// Create client.
 	client, err := New(nil)
 	if err != nil {
@@ -472,45 +472,21 @@ func TestWaitForServiceAppearsWhileWaiting(t *testing.T) {
 			t.Errorf("client close failed: %s", err.Error())
 		}
 	}(client)
-	go func(t *testing.T) {
-		// Create server A.
-		serverA, err := New(&Config{
-			Handler: http.FileServer(http.Dir(".")),
-			Service: "sleuth-test-server-a"})
-		if err != nil {
-			t.Errorf("server instantiation failed: %s", err.Error())
-			return
+	// Create server.
+	server, err := New(&Config{
+		Handler: http.FileServer(http.Dir(".")),
+		Service: "sleuth-test-server-six"})
+	if err != nil {
+		t.Errorf("server instantiation failed: %s", err.Error())
+		return
+	}
+	defer func(server *Client, t *testing.T) {
+		if err := server.Close(); err != nil {
+			t.Errorf("server close failed: %s", err.Error())
 		}
-		defer func(server *Client, t *testing.T) {
-			if err := server.Close(); err != nil {
-				t.Errorf("server close failed: %s", err.Error())
-			}
-		}(serverA, t)
-		// Create server B.
-		serverB, err := New(&Config{
-			Handler: http.FileServer(http.Dir(".")),
-			Service: "sleuth-test-server-b"})
-		if err != nil {
-			t.Errorf("server instantiation failed: %s", err.Error())
-			return
-		}
-		defer func(server *Client, t *testing.T) {
-			if err := server.Close(); err != nil {
-				t.Errorf("server close failed: %s", err.Error())
-			}
-		}(serverB, t)
-	}(t)
-	found := 0
-	go func(client *Client) {
-		client.WaitFor("sleuth-test-server-b")
-		found++
-	}(client)
-	go func(client *Client) {
-		client.WaitFor("sleuth-test-server-a")
-		found++
-	}(client)
-	<-time.After(5 * time.Second)
-	if found != 2 {
-		t.Error("waiting timed out after five seconds")
+	}(server, t)
+	client.WaitFor("sleuth-test-server-six")
+	if client.block("sleuth-test-server-six") {
+		t.Errorf("call to block should have returned immediately")
 	}
 }
