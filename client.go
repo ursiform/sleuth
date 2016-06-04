@@ -21,7 +21,7 @@ type listenerHandles struct {
 
 type waitChannel struct {
 	*sync.Mutex
-	notify chan *peer
+	notify chan struct{}
 }
 
 // Client is the peer on the sleuth network that makes requests and, if a
@@ -62,10 +62,30 @@ func (c *Client) add(gid, name, node, service, version string) error {
 	c.services[service].add(p)
 	// If necessary, notify the additions channel that a peer has been added.
 	if c.additions.notify != nil {
-		c.additions.notify <- p
+		c.additions.notify <- struct{}{}
 	}
 	c.log.Info("sleuth: add %s/%s %s to %s", service, version, name, group)
 	return nil
+}
+
+func (c *Client) block(services ...string) {
+	// Block until the required services are available in the pool.
+	c.additions.Lock()
+	defer c.additions.Unlock()
+	// Even though the client may have just checked to see if services exist,
+	// the check is performed here in case there was a delay waiting for the
+	// additions mutex to become available.
+	if c.has(services...) {
+		return
+	}
+	c.log.Blocked("sleuth: waiting for client to find services %s", services)
+	c.additions.notify = make(chan struct{})
+	for range c.additions.notify {
+		if c.has(services...) {
+			break
+		}
+	}
+	c.additions.notify = nil
 }
 
 // Close leaves the sleuth network and stops the Gyre/Zyre node.
@@ -141,6 +161,23 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		"%s {%s}%s timed out", req.Method, to, req.URL.String())
 }
 
+func (c *Client) has(services ...string) bool {
+	// Check to see if required services are already registered.
+	verified := make(map[string]bool)
+	available := 0
+	for _, service := range services {
+		verified[service] = false
+	}
+	total := len(verified)
+	for service := range verified {
+		if workers, ok := c.services[service]; ok && workers.available() {
+			verified[service] = true
+			available += 1
+		}
+	}
+	return available == total
+}
+
 func (c *Client) listen(handle string, listener chan *http.Response) {
 	c.listeners.Lock()
 	defer c.listeners.Unlock()
@@ -196,38 +233,9 @@ func (c *Client) timeout(handle string) {
 
 // WaitFor blocks until the required services are available in the pool.
 func (c *Client) WaitFor(services ...string) {
-	c.additions.Lock()
-	defer c.additions.Unlock()
-	// Check to see if required services are already registered.
-	verified := make(map[string]bool)
-	available := 0
-	for _, service := range services {
-		verified[service] = false
+	if !c.has(services...) {
+		c.block(services...)
 	}
-	total := len(verified)
-	for service := range verified {
-		if workers, ok := c.services[service]; ok && workers.available() {
-			verified[service] = true
-			available += 1
-		}
-	}
-	if available == total {
-		return
-	}
-	// If some required services are unavailable, block and wait until they are.
-	c.log.Blocked("sleuth: waiting for client to find services %s", services)
-	c.additions.notify = make(chan *peer)
-	for p := range c.additions.notify {
-		service := p.Service
-		if exists, ok := verified[service]; ok && !exists {
-			verified[service] = true
-			available += 1
-			if available == total {
-				break
-			}
-		}
-	}
-	c.additions.notify = nil
 }
 
 func newClient(node *gyre.Gyre, out *logger.Logger) *Client {

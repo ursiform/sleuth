@@ -217,7 +217,7 @@ func TestBadServerInstantiation(t *testing.T) {
 	_, err := New(&Config{
 		Handler: new(silentHandler),
 		Service: "sleuth-test-server-four",
-		Port:    80})
+		Port:    1})
 	if err == nil {
 		t.Errorf("server instantiation with restricted port should fail")
 		return
@@ -458,4 +458,64 @@ func TestError(t *testing.T) {
 	if err.Error() != want {
 		t.Errorf("expected error to be formatted as: %s", want)
 	}
+}
+
+func TestWaitForServiceAppearsWhileWaiting(t *testing.T) {
+	// Create client.
+	client, err := New(nil)
+	if err != nil {
+		t.Errorf("client instantiation failed: %s", err.Error())
+		return
+	}
+	defer func(client *Client) {
+		if err := client.Close(); err != nil {
+			t.Errorf("client close failed: %s", err.Error())
+		}
+	}(client)
+	go func() {
+		// Create server A.
+		serverA, err := New(&Config{
+			Handler: http.FileServer(http.Dir(".")),
+			Service: "sleuth-test-server-a"})
+		if err != nil {
+			t.Errorf("server instantiation failed: %s", err.Error())
+			return
+		}
+		defer func(server *Client) {
+			if err := server.Close(); err != nil {
+				t.Errorf("server close failed: %s", err.Error())
+			}
+		}(serverA)
+		// Create server B.
+		serverB, err := New(&Config{
+			Handler: http.FileServer(http.Dir(".")),
+			Service: "sleuth-test-server-b"})
+		if err != nil {
+			t.Errorf("server instantiation failed: %s", err.Error())
+			return
+		}
+		defer func(server *Client) {
+			if err := server.Close(); err != nil {
+				t.Errorf("server close failed: %s", err.Error())
+			}
+		}(serverB)
+	}()
+	found := 0
+	go func() {
+		client.WaitFor("sleuth-test-server-b")
+		found++
+	}()
+	go func() {
+		client.WaitFor("sleuth-test-server-a")
+		found++
+	}()
+	<-time.After(3 * time.Second)
+	if found == 2 {
+		return
+	}
+	<-time.After(3 * time.Second)
+	if found == 2 {
+		return
+	}
+	t.Error("waiting timed out after six seconds")
 }

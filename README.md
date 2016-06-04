@@ -91,6 +91,8 @@ func main() {
 }
 ```
 
+---
+
 Additionally, [`sleuth-example` is a fuller example of two services on a `sleuth` network](https://github.com/afshin/sleuth-example/) that need to communicate with each other.
 
 A complete tutorial based on that example can be found here: [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/).
@@ -109,6 +111,12 @@ A complete tutorial based on that example can be found here: [Service autodiscov
 **Q**: What if I have multiple instances of the same service?
 
 **A**: Great! `sleuth` will automatically round-robin the requests each client makes to all services that share the same name.
+
+---
+
+**Q**: What happens if a service goes offline?
+
+**A**: Whenever possible, a service should call its client's `Close()` method before exiting to notify the network of its departure. But even if a service fails to do that, the `sleuth` network's underlying `Gyre`/`Zyre` network will detect within about one second that a peer has disappeared. All requests to that service will be routed to other peers offering the same service. If no peers exist for that service, then calls to `Do()` will return an unknown service error (code `919`), which means that if you're already checking for errors when making requests, you're covered.
 
 ---
 
