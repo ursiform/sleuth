@@ -464,3 +464,12 @@ func TestError(t *testing.T) {
 		t.Errorf("expected error to be formatted as: %s", want)
 	}
 }
+
+func TestErrResUnmarshalJSON(t *testing.T) {
+	payload := zip([]byte("This is invalid JSON."))
+	_, _, err := unmarshalResponse(payload)
+	code := err.(*Error).Codes[0]
+	if code != errResUnmarshalJSON {
+		t.Errorf("expected error %d to equal: %d", code, errResUnmarshalJSON)
+	}
+}
