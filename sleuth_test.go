@@ -509,13 +509,8 @@ func TestWaitForServiceAppearsWhileWaiting(t *testing.T) {
 		client.WaitFor("sleuth-test-server-a")
 		found++
 	}()
-	<-time.After(3 * time.Second)
-	if found == 2 {
-		return
+	<-time.After(10 * time.Second)
+	if found != 2 {
+		t.Error("waiting timed out after ten seconds")
 	}
-	<-time.After(3 * time.Second)
-	if found == 2 {
-		return
-	}
-	t.Error("waiting timed out after six seconds")
 }
