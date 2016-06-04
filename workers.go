@@ -6,13 +6,13 @@ package sleuth
 
 import "sync"
 
-type serviceWorkers struct {
+type workers struct {
 	*sync.Mutex
 	current int
 	list    []*peer
 }
 
-func (w *serviceWorkers) add(p *peer) int {
+func (w *workers) add(p *peer) int {
 	w.Mutex.Lock()
 	defer w.Mutex.Unlock()
 	for _, service := range w.list {
@@ -24,13 +24,13 @@ func (w *serviceWorkers) add(p *peer) int {
 	return len(w.list)
 }
 
-func (w *serviceWorkers) available() bool {
+func (w *workers) available() bool {
 	w.Mutex.Lock()
 	defer w.Mutex.Unlock()
 	return len(w.list) > 0
 }
 
-func (w *serviceWorkers) next() *peer {
+func (w *workers) next() *peer {
 	w.Mutex.Lock()
 	defer w.Mutex.Unlock()
 	length := len(w.list)
@@ -46,7 +46,7 @@ func (w *serviceWorkers) next() *peer {
 	return w.list[0]
 }
 
-func (w *serviceWorkers) remove(name string) (int, *peer) {
+func (w *workers) remove(name string) (int, *peer) {
 	w.Mutex.Lock()
 	defer w.Mutex.Unlock()
 	for i, p := range w.list {
@@ -59,8 +59,8 @@ func (w *serviceWorkers) remove(name string) (int, *peer) {
 	return len(w.list), nil
 }
 
-func newWorkers() *serviceWorkers {
-	w := &serviceWorkers{}
+func newWorkers() *workers {
+	w := &workers{}
 	w.Mutex = new(sync.Mutex)
 	w.list = make([]*peer, 0)
 	return w

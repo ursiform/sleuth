@@ -37,8 +37,8 @@ type Client struct {
 	log       *logger.Logger
 	node      *gyre.Gyre
 
-	directory map[string]string          // map[node-name]service-type
-	services  map[string]*serviceWorkers // map[service-type]service-workers
+	directory map[string]string   // map[node-name]service-type
+	services  map[string]*workers // map[service-type]service-workers
 }
 
 func (c *Client) add(gid, name, node, service, version string) error {
@@ -250,5 +250,5 @@ func newClient(node *gyre.Gyre, out *logger.Logger) *Client {
 		log:      out,
 		node:     node,
 		Timeout:  time.Millisecond * 500,
-		services: make(map[string]*serviceWorkers)}
+		services: make(map[string]*workers)}
 }
