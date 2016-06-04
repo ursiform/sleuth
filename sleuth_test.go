@@ -53,6 +53,9 @@ func TestRequestResponseCycle(t *testing.T) {
 	}(server, t)
 	// Wait until the server has been added to the client pool.
 	client.WaitFor(addr)
+	if client.block(addr) {
+		t.Errorf("call to block should have returned immediately")
+	}
 	request, err := http.NewRequest("GET", scheme+"://"+addr+"/README.md", nil)
 	if err != nil {
 		t.Errorf("request instantiation failed: %s", err.Error())
@@ -457,36 +460,5 @@ func TestError(t *testing.T) {
 	err := newError(code, message)
 	if err.Error() != want {
 		t.Errorf("expected error to be formatted as: %s", want)
-	}
-}
-
-func TestBlockReturnImmediately(t *testing.T) {
-	// Create client.
-	client, err := New(nil)
-	if err != nil {
-		t.Errorf("client instantiation failed: %s", err.Error())
-		return
-	}
-	defer func(client *Client) {
-		if err := client.Close(); err != nil {
-			t.Errorf("client close failed: %s", err.Error())
-		}
-	}(client)
-	// Create server.
-	server, err := New(&Config{
-		Handler: http.FileServer(http.Dir(".")),
-		Service: "sleuth-test-server-six"})
-	if err != nil {
-		t.Errorf("server instantiation failed: %s", err.Error())
-		return
-	}
-	defer func(server *Client, t *testing.T) {
-		if err := server.Close(); err != nil {
-			t.Errorf("server close failed: %s", err.Error())
-		}
-	}(server, t)
-	client.WaitFor("sleuth-test-server-six")
-	if client.block("sleuth-test-server-six") {
-		t.Errorf("call to block should have returned immediately")
 	}
 }
