@@ -14,7 +14,7 @@ import (
 	"github.com/zeromq/gyre"
 )
 
-type listeners struct {
+type listener struct {
 	*sync.Mutex
 	handles map[string]chan *http.Response
 }
@@ -33,7 +33,7 @@ type Client struct {
 
 	additions *notifier
 	handler   http.Handler
-	listeners *listeners
+	listener  *listener
 	log       *logger.Logger
 	node      *gyre.Gyre
 
@@ -181,9 +181,9 @@ func (c *Client) has(services ...string) bool {
 }
 
 func (c *Client) listen(handle string, listener chan *http.Response) {
-	c.listeners.Lock()
-	defer c.listeners.Unlock()
-	c.listeners.handles[handle] = listener
+	c.listener.Lock()
+	defer c.listener.Unlock()
+	c.listener.handles[handle] = listener
 	go c.timeout(handle)
 }
 
@@ -192,11 +192,11 @@ func (c *Client) receive(payload []byte) error {
 	if err != nil {
 		return err.(*Error).escalate(errRECV)
 	}
-	c.listeners.Lock()
-	defer c.listeners.Unlock()
-	if listener, ok := c.listeners.handles[handle]; ok {
+	c.listener.Lock()
+	defer c.listener.Unlock()
+	if listener, ok := c.listener.handles[handle]; ok {
 		listener <- res
-		delete(c.listeners.handles, handle)
+		delete(c.listener.handles, handle)
 	} else {
 		return newError(errRECV, "unknown handle %s", handle)
 	}
@@ -225,11 +225,11 @@ func (c *Client) reply(payload []byte) error {
 
 func (c *Client) timeout(handle string) {
 	<-time.After(c.Timeout)
-	c.listeners.Lock()
-	defer c.listeners.Unlock()
-	if listener, ok := c.listeners.handles[handle]; ok {
+	c.listener.Lock()
+	defer c.listener.Unlock()
+	if listener, ok := c.listener.handles[handle]; ok {
 		listener <- nil
-		delete(c.listeners.handles, handle)
+		delete(c.listener.handles, handle)
 	}
 }
 
@@ -244,7 +244,7 @@ func newClient(node *gyre.Gyre, out *logger.Logger) *Client {
 	return &Client{
 		additions: &notifier{Mutex: new(sync.Mutex)},
 		directory: make(map[string]string),
-		listeners: &listeners{
+		listener: &listener{
 			new(sync.Mutex),
 			make(map[string]chan *http.Response)},
 		log:      out,
