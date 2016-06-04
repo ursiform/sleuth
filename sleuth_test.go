@@ -53,6 +53,8 @@ func TestRequestResponseCycle(t *testing.T) {
 	}(server, t)
 	// Wait until the server has been added to the client pool.
 	client.WaitFor(addr)
+	// Set timeout to 10 seconds to accommodate slow test spin-up.
+	client.Timeout = time.Second * 10
 	if client.block(addr) {
 		t.Errorf("call to block should have returned immediately")
 	}
