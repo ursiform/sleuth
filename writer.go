@@ -42,11 +42,10 @@ func (w *writer) WriteHeader(code int) {
 }
 
 func newResponseWriter(node *gyre.Gyre, dest *destination) *writer {
-	w := new(writer)
-	w.node = node
-	w.output = new(response)
-	w.output.Handle = dest.handle
-	w.output.Header = http.Header(make(map[string][]string))
-	w.peer = dest.node
-	return w
+	return &writer{
+		node: node,
+		output: &response{
+			Handle: dest.handle,
+			Header: http.Header(make(map[string][]string))},
+		peer: dest.node}
 }
