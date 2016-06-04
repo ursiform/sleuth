@@ -13,7 +13,8 @@ import (
 // Config is the configuration specification for sleuth client instantiation.
 // It has JSON tag values defined for all public fields except Handler in order
 // to allow users to store sleuth configuration in JSON files. All fields are
-// optional, but in production settings, Interface is recommended, if known.
+// optional, but Interface is particularly important to guarantee all peers
+// reside on the same subnet.
 type Config struct {
 	// Handler is the HTTP handler for a service made available via sleuth.
 	Handler http.Handler `json:"-"`
