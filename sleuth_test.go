@@ -473,3 +473,12 @@ func TestErrResUnmarshalJSON(t *testing.T) {
 		t.Errorf("expected error %d to equal: %d", code, errResUnmarshalJSON)
 	}
 }
+
+func TestErrReqUnmarshalJSON(t *testing.T) {
+	payload := zip([]byte("This is invalid JSON."))
+	_, _, err := unmarshalRequest(payload)
+	code := err.(*Error).Codes[0]
+	if code != errReqUnmarshalJSON {
+		t.Errorf("expected error %d to equal: %d", code, errReqUnmarshalJSON)
+	}
+}
