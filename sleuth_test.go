@@ -231,7 +231,7 @@ func TestWorkersNextNonexistent(t *testing.T) {
 func TestWorkersRemove(t *testing.T) {
 	w := newWorkers()
 	w.add(&peer{name: "foo", node: "bar", service: "baz"})
-	if _, p := w.remove("foo"); p == nil || p.name != "foo" {
+	if _, p := w.remove("foo"); p == nil || p.name != "foo" || w.available() {
 		t.Error("expected worker to be removed")
 	}
 }
