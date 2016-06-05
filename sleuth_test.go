@@ -281,7 +281,7 @@ func TestZipUnzip(t *testing.T) {
 	in := []byte("a value that should be zipped")
 	zipped := zip(in)
 	if out, err := unzip(zipped); err != nil {
-		t.Errorf("unzip failed: ", err.Error())
+		t.Errorf("unzip failed: %s", err.Error())
 	} else if string(out) != string(in) {
 		t.Errorf("zip failed")
 	}
