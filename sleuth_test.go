@@ -35,7 +35,7 @@ func testCodes(t *testing.T, err error, want []int) {
 	}
 }
 
-// Test client.go units.
+// Test client.go
 
 func TestClientAddBadMember(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
@@ -43,6 +43,7 @@ func TestClientAddBadMember(t *testing.T) {
 	err := c.add(group, "foo", "bar", "", "")
 	if err == nil {
 		t.Errorf("expected client dispatch to fail on bad action")
+		return
 	}
 	testCodes(t, err, []int{errAdd})
 }
@@ -53,6 +54,7 @@ func TestClientDispatchBadAction(t *testing.T) {
 	err := c.dispatch([]byte(group + "FAIL"))
 	if err == nil {
 		t.Errorf("expected client dispatch to fail on bad action")
+		return
 	}
 	testCodes(t, err, []int{errDispatchAction})
 }
@@ -63,6 +65,7 @@ func TestClientDispatchEmpty(t *testing.T) {
 	err := c.dispatch([]byte{})
 	if err == nil {
 		t.Errorf("expected client dispatch to fail on empty payload")
+		return
 	}
 	testCodes(t, err, []int{errDispatchHeader})
 }
@@ -74,8 +77,23 @@ func TestClientDoUnknownScheme(t *testing.T) {
 	_, err := c.Do(req)
 	if err == nil {
 		t.Errorf("expected client Do to fail on unknown scheme")
+		return
 	}
 	testCodes(t, err, []int{errScheme})
+}
+
+func TestClientDoTimeout(t *testing.T) {
+	c, _ := New(nil)
+	defer c.Close()
+	service := "foo"
+	c.add(group, "bar", "baz", service, "")
+	req, _ := http.NewRequest("POST", "sleuth://"+service+"/", nil)
+	_, err := c.Do(req)
+	if err == nil {
+		t.Errorf("expected client Do to fail by timing out")
+		return
+	}
+	testCodes(t, err, []int{errTimeout})
 }
 
 func TestClientDoUnknownService(t *testing.T) {
@@ -85,6 +103,7 @@ func TestClientDoUnknownService(t *testing.T) {
 	_, err := c.Do(req)
 	if err == nil {
 		t.Errorf("expected client Do to fail on unknown service")
+		return
 	}
 	testCodes(t, err, []int{errUnknownService})
 }
@@ -96,6 +115,7 @@ func TestClientReceiveBadHandle(t *testing.T) {
 	err := c.receive(marshalResponse(res)[len(group)+len(recv):])
 	if err == nil {
 		t.Errorf("expected client receive to fail on bad handle")
+		return
 	}
 	testCodes(t, err, []int{errRECV})
 }
@@ -106,6 +126,7 @@ func TestClientReceiveBadPayload(t *testing.T) {
 	err := c.receive([]byte(""))
 	if err == nil {
 		t.Errorf("expected client receive to fail on bad payload")
+		return
 	}
 	testCodes(t, err, []int{errUnzip, errResUnmarshal, errRECV})
 }
@@ -116,11 +137,12 @@ func TestClientReplyBadPayload(t *testing.T) {
 	err := c.reply([]byte(""))
 	if err == nil {
 		t.Errorf("expected client reply to fail on bad payload")
+		return
 	}
 	testCodes(t, err, []int{errUnzip, errReqUnmarshal, errREPL})
 }
 
-// Test error.go units.
+// Test error.go
 
 func TestError(t *testing.T) {
 	code := 1
@@ -132,34 +154,37 @@ func TestError(t *testing.T) {
 	}
 }
 
-// Test request.go units.
+// Test request.go
 
 func TestUnmarshalRequestBadJSON(t *testing.T) {
 	payload := zip([]byte("{bad json}"))
 	_, _, err := unmarshalRequest(payload)
 	if err == nil {
 		t.Errorf("expected unmarshalRequest to fail on bad json")
+		return
 	}
 	testCodes(t, err, []int{errReqUnmarshalJSON})
 }
 
-// Test response.go units.
+// Test response.go
 
 func TestUnmarshalResponseBadJSON(t *testing.T) {
 	payload := zip([]byte("{bad json}"))
 	_, _, err := unmarshalResponse(payload)
 	if err == nil {
 		t.Errorf("expected unmarshalResponse to fail on bad json")
+		return
 	}
 	testCodes(t, err, []int{errResUnmarshalJSON})
 }
 
-// Test sleuth.go units.
+// Test sleuth.go
 
 func TestNewBadInterface(t *testing.T) {
 	_, err := New(&Config{Interface: "foo"})
 	if err == nil {
 		t.Errorf("expected New to fail on start with bad interface")
+		return
 	}
 	testCodes(t, err, []int{errStart, errCreate, errNew})
 }
@@ -176,6 +201,7 @@ func TestNewBadPort(t *testing.T) {
 	_, err := New(&Config{Port: 1})
 	if err == nil {
 		t.Errorf("expected New to fail on start with bad port")
+		return
 	}
 	testCodes(t, err, []int{errStart, errCreate, errNew})
 }
@@ -184,11 +210,12 @@ func TestNewBadService(t *testing.T) {
 	_, err := New(&Config{Handler: http.FileServer(http.Dir("."))})
 	if err == nil {
 		t.Errorf("expected New to fail with bad service")
+		return
 	}
 	testCodes(t, err, []int{errService})
 }
 
-// Test workers.go units.
+// Test workers.go
 
 func TestWorkersAddDuplicate(t *testing.T) {
 	w := newWorkers()
@@ -243,7 +270,7 @@ func TestWorkersRemoveNonexistent(t *testing.T) {
 	}
 }
 
-// Test writer.go units.
+// Test writer.go
 
 type goodWhisperer struct{}
 
@@ -275,7 +302,7 @@ func TestWriterErrWhisper(t *testing.T) {
 	}
 }
 
-// Test zip.go units.
+// Test zip.go
 
 func TestZipUnzip(t *testing.T) {
 	in := []byte("a value that should be zipped")
@@ -361,47 +388,6 @@ func TestRequestResponseCycle(t *testing.T) {
 	response.Body.Close()
 	if string(output) != body {
 		t.Errorf("client.Do expected %s to equal %s", string(output), body)
-		return
-	}
-}
-
-func TestTimeout(t *testing.T) {
-	// Create server.
-	addr := "sleuth-test-server-two"
-	server, err := New(&Config{Handler: new(silentHandler), Service: addr})
-	if err != nil {
-		t.Errorf("server instantiation failed: %s", err.Error())
-		return
-	}
-	defer func(server *Client, t *testing.T) {
-		if err := server.Close(); err != nil {
-			t.Errorf("server close failed: %s", err.Error())
-		}
-	}(server, t)
-	// Create client.
-	client, err := New(nil)
-	if err != nil {
-		t.Errorf("client instantiation failed: %s", err.Error())
-		return
-	}
-	defer func(client *Client, t *testing.T) {
-		if err := client.Close(); err != nil {
-			t.Errorf("client close failed: %s", err.Error())
-		}
-	}(client, t)
-	// Wait long enough that the server should be ready (but not guaranteed).
-	// If the server is ready, then WaitFor will not block.
-	<-time.After(2000 * time.Millisecond)
-	// Wait until the server has been added to the client pool.
-	client.WaitFor(addr)
-	request, err := http.NewRequest("GET", scheme+"://"+addr+"/", nil)
-	if err != nil {
-		t.Errorf("request instantiation failed: %s", err.Error())
-		return
-	}
-	_, err = client.Do(request)
-	if err == nil {
-		t.Errorf("client request should have timed out")
 		return
 	}
 }
