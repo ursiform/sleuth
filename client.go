@@ -146,7 +146,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	receiver := c.node.UUID()
 	payload, err := marshalRequest(receiver, handle, req)
 	if err != nil {
-		return nil, err
+		return nil, err.(*Error).escalate(errRequest)
 	}
 	c.log.Debug("sleuth: %s %s://%s@%s%s",
 		req.Method, scheme, to, p.name, req.URL.String())
