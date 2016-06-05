@@ -254,7 +254,7 @@ func (g *goodWhisperer) Whisper(addr string, payload []byte) error {
 type badWhisperer struct{}
 
 func (b *badWhisperer) Whisper(addr string, payload []byte) error {
-	return errors.New("mock whisper error")
+	return errors.New("bad whisperer error")
 }
 
 func TestWriterWrite(t *testing.T) {
