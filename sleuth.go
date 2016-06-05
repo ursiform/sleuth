@@ -32,7 +32,6 @@ type connection struct {
 	node    string
 	port    int
 	server  bool
-	verbose bool
 	version string
 }
 
@@ -78,11 +77,6 @@ func newNode(log *logger.Logger, conn *connection) (*gyre.Gyre, error) {
 	node, err := gyre.New()
 	if err != nil {
 		return nil, newError(errInitialize, err.Error())
-	}
-	if conn.verbose {
-		if err := node.SetVerbose(); err != nil {
-			return nil, newError(errVerbose, err.Error())
-		}
 	}
 	if err := node.SetPort(conn.port); err != nil {
 		return nil, newError(errPort, err.Error())
@@ -131,7 +125,6 @@ func New(config *Config) (*Client, error) {
 	// is guaranteed to be correct in initConfig, errors can be ignored.
 	log, _ := logger.New(config.logLevel)
 	conn := new(connection)
-	conn.verbose = config.Verbose
 	if conn.server = config.Handler != nil; conn.server {
 		conn.handler = config.Handler
 		conn.name = config.Service

@@ -218,7 +218,6 @@ func TestBadLogLevelInConfig(t *testing.T) {
 
 func TestBadServerInstantiation(t *testing.T) {
 	_, err := New(&Config{
-		Verbose: true,
 		Handler: new(silentHandler),
 		Service: "sleuth-test-server-four",
 		Port:    1})

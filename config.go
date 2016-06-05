@@ -43,9 +43,6 @@ type Config struct {
 	// Service is the name of the service being offered if a Handler exists.
 	Service string `json:"service,omitempty"`
 
-	// Verbose enables logging of underlying Gyre/Zyre messages when set to true.
-	Verbose bool `json:"verbose,omitempty"`
-
 	// Version is the optional version string of the service being offered.
 	Version string `json:"version,omitempty"`
 
