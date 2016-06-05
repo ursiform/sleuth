@@ -70,7 +70,7 @@ func (c *Client) add(gid, name, node, service, version string) error {
 
 // Returns true if it had to block and false if it returns immediately.
 func (c *Client) block(services ...string) bool {
-	// Block until the required services are available in the pool.
+	// Block until the required services are available to the client.
 	c.additions.Lock()
 	defer c.additions.Unlock()
 	// Even though the client may have just checked to see if services exist,
@@ -233,7 +233,7 @@ func (c *Client) timeout(handle string) {
 	}
 }
 
-// WaitFor blocks until the required services are available in the pool.
+// WaitFor blocks until the required services are available to the client.
 func (c *Client) WaitFor(services ...string) {
 	if !c.has(services...) {
 		c.block(services...)
