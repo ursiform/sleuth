@@ -219,7 +219,7 @@ func (c *Client) reply(payload []byte) error {
 	if err != nil {
 		return err.(*Error).escalate(errREPL)
 	}
-	c.handler.ServeHTTP(newResponseWriter(c.node, dest), req)
+	c.handler.ServeHTTP(newWriter(c.node, dest), req)
 	return nil
 }
 

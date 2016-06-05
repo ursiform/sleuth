@@ -4,17 +4,17 @@
 
 package sleuth
 
-import (
-	"net/http"
+import "net/http"
 
-	"github.com/zeromq/gyre"
-)
+type whisperer interface {
+	Whisper(addr string, payload []byte) error
+}
 
 type writer struct {
 	http.ResponseWriter
-	node   *gyre.Gyre
-	output *response
-	peer   string
+	output    *response
+	peer      string
+	whisperer whisperer
 }
 
 func (w *writer) Header() http.Header {
@@ -31,7 +31,7 @@ func (w *writer) Write(data []byte) (int, error) {
 	}
 	w.output.Body = data
 	payload := marshalResponse(w.output)
-	if err := w.node.Whisper(w.peer, payload); err != nil {
+	if err := w.whisperer.Whisper(w.peer, payload); err != nil {
 		return 0, newError(errResWhisper, err.Error())
 	}
 	return len(data), nil
@@ -41,11 +41,11 @@ func (w *writer) WriteHeader(code int) {
 	w.output.Code = code
 }
 
-func newResponseWriter(node *gyre.Gyre, dest *destination) *writer {
+func newWriter(node whisperer, dest *destination) *writer {
 	return &writer{
-		node: node,
 		output: &response{
 			Handle: dest.handle,
 			Header: http.Header(make(map[string][]string))},
-		peer: dest.node}
+		peer:      dest.node,
+		whisperer: node}
 }
