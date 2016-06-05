@@ -305,7 +305,7 @@ func (h *echoHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 type silentHandler struct{}
 
 func (*silentHandler) ServeHTTP(http.ResponseWriter, *http.Request) {
-	// Bad handler does nothing.
+	// Silent handler does nothing.
 }
 
 func TestRequestResponseCycle(t *testing.T) {
@@ -321,7 +321,7 @@ func TestRequestResponseCycle(t *testing.T) {
 		}
 	}(client, t)
 	// Create server.
-	addr := "sleuth-test"
+	addr := "sleuth-test-server-one"
 	server, err := New(&Config{
 		Handler: new(echoHandler), Service: addr})
 	if err != nil {
@@ -367,7 +367,7 @@ func TestRequestResponseCycle(t *testing.T) {
 
 func TestTimeout(t *testing.T) {
 	// Create server.
-	addr := "sleuth-test-server-three"
+	addr := "sleuth-test-server-two"
 	server, err := New(&Config{Handler: new(silentHandler), Service: addr})
 	if err != nil {
 		t.Errorf("server instantiation failed: %s", err.Error())
