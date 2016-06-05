@@ -90,7 +90,7 @@ func (c *Client) block(services ...string) bool {
 	return true
 }
 
-// Close leaves the sleuth network and stops the Gyre/Zyre node.
+// Close leaves the sleuth network and stops the Gyre node.
 func (c *Client) Close() error {
 	c.log.Info("%s leaving %s...", c.node.Name(), group)
 	if err := c.node.Leave(group); err != nil {
