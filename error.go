@@ -57,13 +57,14 @@ const (
 //		// Outputs an integer slice.
 // 	}
 type Error struct {
+	// Codes contains the list of error codes that led to a specific error.
 	Codes   []int
-	Message string
+	message string
 }
 
 // Error returns an error string.
 func (e *Error) Error() string {
-	return fmt.Sprintf("sleuth: %s %v", e.Message, e.Codes)
+	return fmt.Sprintf("sleuth: %s %v", e.message, e.Codes)
 }
 
 func (e *Error) escalate(code int) *Error {
@@ -72,7 +73,7 @@ func (e *Error) escalate(code int) *Error {
 }
 
 func newError(code int, format string, v ...interface{}) *Error {
-	err := &Error{Codes: make([]int, 1), Message: fmt.Sprintf(format, v...)}
+	err := &Error{Codes: make([]int, 1), message: fmt.Sprintf(format, v...)}
 	err.Codes[0] = code
 	return err
 }
