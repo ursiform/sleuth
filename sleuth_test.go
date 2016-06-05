@@ -1,3 +1,7 @@
+// Copyright 2016 Afshin Darian. All rights reserved.
+// Use of this source code is governed by The MIT License
+// that can be found in the LICENSE file.
+
 package sleuth
 
 import (
@@ -478,5 +482,14 @@ func TestErrReqUnmarshalJSON(t *testing.T) {
 	code := err.(*Error).Codes[0]
 	if code != errReqUnmarshalJSON {
 		t.Errorf("expected error %d to equal: %d", code, errReqUnmarshalJSON)
+	}
+}
+
+func TestErrUnzip(t *testing.T) {
+	in := []byte("a value that cannot be unzipped")
+	_, err := unzip(in)
+	code := err.(*Error).Codes[0]
+	if code != errUnzip {
+		t.Errorf("unzip expected %d got %d", errUnzip, code)
 	}
 }
