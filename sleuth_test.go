@@ -369,7 +369,7 @@ func TestIntegratedCycle(t *testing.T) {
 			t.Errorf("server close failed: %s", err.Error())
 		}
 	}(server, t)
-	// Wait until the server has been added to the client pool.
+	// Wait until the server becomes available.
 	client.WaitFor(addr)
 	// Set timeout to 10 seconds to accommodate slow test spin-up.
 	client.Timeout = time.Second * 10
