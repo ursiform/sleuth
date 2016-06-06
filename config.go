@@ -34,6 +34,7 @@ type Config struct {
 	// 	"init"		Initialization notifications and lower are logged.
 	// 	"request"	Incoming requests and lower are logged.
 	// 	"info"		Info output and lower are logged.
+	// 	"verbose"	Verbose output and lower are logged.
 	// 	"debug"		All log output is shown.
 	LogLevel string `json:"loglevel,omitempty"`
 
