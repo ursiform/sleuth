@@ -11,6 +11,8 @@ one another.
 ## Installation
 `sleuth` is dependent on [`libzmq`](https://github.com/zeromq/libzmq), which can be installed either from source or from binaries. For more information, please refer to [ØMQ: "Get the Software"](http://zeromq.org/intro:get-the-software) or the [`libzmq` repository](https://github.com/zeromq/libzmq).
 
+Another option is to use a [Docker container that comes with Go and ZeroMQ](https://hub.docker.com/r/rxwen/golang-zeromq/).
+
 Once `libzmq` is available on a system, `sleuth` can be installed like any other Go library:
 
 ```
