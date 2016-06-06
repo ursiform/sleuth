@@ -51,8 +51,7 @@ func (w *workers) remove(name string) (int, *peer) {
 	defer w.Mutex.Unlock()
 	for i, p := range w.list {
 		if p.name == name {
-			list := w.list
-			w.list = append(list[0:i], list[i+1:]...)
+			w.list = append(w.list[0:i], w.list[i+1:]...)
 			return len(w.list), p
 		}
 	}
