@@ -20,6 +20,33 @@ func init() {
 	group = "SLEUTH-vT"
 }
 
+// badWhisperer generates an error when whispering.
+type badWhisperer struct{}
+
+// Whisper allows goodWhisperer to conform to the whisperer interface. It
+// returns and error every time.
+func (b *badWhisperer) Whisper(addr string, payload []byte) error {
+	return errors.New("bad whisperer error")
+}
+
+// goodWhisperer can whisper without errors.
+type goodWhisperer struct{}
+
+// Whisper allows goodWhisperer to conform to the whisperer interface. It
+// succeeds every time.
+func (g *goodWhisperer) Whisper(addr string, payload []byte) error {
+	return nil
+}
+
+// echoHandler is the handler for the server in the integration test.
+type echoHandler struct{}
+
+// ServeHTTP allows echoHandler to conform to the http.Handler interface.
+func (*echoHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	body, _ := ioutil.ReadAll(req.Body)
+	res.Write(body)
+}
+
 // testCodes compares the error codes in an error with a list of wanted codes.
 func testCodes(t *testing.T, err error, want []int) {
 	codes := err.(*Error).Codes
@@ -70,18 +97,6 @@ func TestClientDispatchEmpty(t *testing.T) {
 	testCodes(t, err, []int{errDispatchHeader})
 }
 
-func TestClientDoUnknownScheme(t *testing.T) {
-	log, _ := logger.New(logger.Silent)
-	c := newClient(nil, log)
-	req, _ := http.NewRequest("POST", "foo://bar/baz", nil)
-	_, err := c.Do(req)
-	if err == nil {
-		t.Errorf("expected client Do to fail on unknown scheme")
-		return
-	}
-	testCodes(t, err, []int{errScheme})
-}
-
 func TestClientDoTimeout(t *testing.T) {
 	c, _ := New(nil)
 	defer c.Close()
@@ -94,6 +109,18 @@ func TestClientDoTimeout(t *testing.T) {
 		return
 	}
 	testCodes(t, err, []int{errTimeout})
+}
+
+func TestClientDoUnknownScheme(t *testing.T) {
+	log, _ := logger.New(logger.Silent)
+	c := newClient(nil, log)
+	req, _ := http.NewRequest("POST", "foo://bar/baz", nil)
+	_, err := c.Do(req)
+	if err == nil {
+		t.Errorf("expected client Do to fail on unknown scheme")
+		return
+	}
+	testCodes(t, err, []int{errScheme})
 }
 
 func TestClientDoUnknownService(t *testing.T) {
@@ -156,7 +183,7 @@ func TestError(t *testing.T) {
 
 // Test request.go
 
-func TestUnmarshalRequestBadJSON(t *testing.T) {
+func TestRequestUnmarshalBadJSON(t *testing.T) {
 	payload := zip([]byte("{bad json}"))
 	_, _, err := unmarshalRequest(payload)
 	if err == nil {
@@ -168,7 +195,7 @@ func TestUnmarshalRequestBadJSON(t *testing.T) {
 
 // Test response.go
 
-func TestUnmarshalResponseBadJSON(t *testing.T) {
+func TestResponseUnmarshalBadJSON(t *testing.T) {
 	payload := zip([]byte("{bad json}"))
 	_, _, err := unmarshalResponse(payload)
 	if err == nil {
@@ -180,7 +207,7 @@ func TestUnmarshalResponseBadJSON(t *testing.T) {
 
 // Test sleuth.go
 
-func TestNewBadInterface(t *testing.T) {
+func TestSleuthNewBadInterface(t *testing.T) {
 	_, err := New(&Config{Interface: "foo"})
 	if err == nil {
 		t.Errorf("expected New to fail on start with bad interface")
@@ -189,7 +216,7 @@ func TestNewBadInterface(t *testing.T) {
 	testCodes(t, err, []int{errStart, errCreate, errNew})
 }
 
-func TestNewBadLogLevel(t *testing.T) {
+func TestSleuthNewBadLogLevel(t *testing.T) {
 	c, _ := New(&Config{LogLevel: "foo"})
 	if c.log.Level() != logger.Debug {
 		t.Errorf("expected log level 'foo' to be coerced to 'debug'")
@@ -197,7 +224,7 @@ func TestNewBadLogLevel(t *testing.T) {
 	}
 }
 
-func TestNewBadPort(t *testing.T) {
+func TestSleuthNewBadPort(t *testing.T) {
 	_, err := New(&Config{Port: 1})
 	if err == nil {
 		t.Errorf("expected New to fail on start with bad port")
@@ -206,7 +233,7 @@ func TestNewBadPort(t *testing.T) {
 	testCodes(t, err, []int{errStart, errCreate, errNew})
 }
 
-func TestNewBadService(t *testing.T) {
+func TestSleuthNewBadService(t *testing.T) {
 	_, err := New(&Config{Handler: http.FileServer(http.Dir("."))})
 	if err == nil {
 		t.Errorf("expected New to fail with bad service")
@@ -272,18 +299,6 @@ func TestWorkersRemoveNonexistent(t *testing.T) {
 
 // Test writer.go
 
-type goodWhisperer struct{}
-
-func (g *goodWhisperer) Whisper(addr string, payload []byte) error {
-	return nil
-}
-
-type badWhisperer struct{}
-
-func (b *badWhisperer) Whisper(addr string, payload []byte) error {
-	return errors.New("bad whisperer error")
-}
-
 func TestWriterWrite(t *testing.T) {
 	data := []byte("foo bar baz")
 	w := newWriter(new(goodWhisperer), &destination{node: "qux", handle: "quux"})
@@ -294,15 +309,28 @@ func TestWriterWrite(t *testing.T) {
 	}
 }
 
-func TestWriterErrWhisper(t *testing.T) {
+func TestWriterWriteBadWhisperer(t *testing.T) {
 	data := []byte("foo bar baz")
 	w := newWriter(new(badWhisperer), &destination{node: "qux", handle: "quux"})
-	if _, err := w.Write(data); err == nil {
-		t.Errorf("expected writer to fail")
+	_, err := w.Write(data)
+	if err == nil {
+		t.Errorf("expected writer to fail using bad whisperer")
+		return
 	}
+	testCodes(t, err, []int{errResWhisper})
 }
 
 // Test zip.go
+
+func TestZipUnzipBadInput(t *testing.T) {
+	in := []byte("a value that cannot be unzipped")
+	_, err := unzip(in)
+	if err == nil {
+		t.Errorf("expected unzip to fail with bad input")
+		return
+	}
+	testCodes(t, err, []int{errUnzip})
+}
 
 func TestZipUnzip(t *testing.T) {
 	in := []byte("a value that should be zipped")
@@ -314,28 +342,9 @@ func TestZipUnzip(t *testing.T) {
 	}
 }
 
-func TestUnzipErr(t *testing.T) {
-	in := []byte("a value that cannot be unzipped")
-	_, err := unzip(in)
-	testCodes(t, err, []int{errUnzip})
-}
-
 // Test integrated package.
 
-type echoHandler struct{}
-
-func (h *echoHandler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	body, _ := ioutil.ReadAll(req.Body)
-	res.Write(body)
-}
-
-type silentHandler struct{}
-
-func (*silentHandler) ServeHTTP(http.ResponseWriter, *http.Request) {
-	// Silent handler does nothing.
-}
-
-func TestRequestResponseCycle(t *testing.T) {
+func TestIntegratedCycle(t *testing.T) {
 	// Create client.
 	client, err := New(nil)
 	if err != nil {
