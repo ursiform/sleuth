@@ -9,14 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pborman/uuid"
 	"github.com/ursiform/logger"
 	"github.com/zeromq/gyre"
 )
 
 type listener struct {
 	*sync.Mutex
-	handles map[string]chan *http.Response
+	handles map[int64]chan *http.Response
 }
 
 type notifier struct {
@@ -32,6 +31,7 @@ type Client struct {
 	Timeout time.Duration
 
 	additions *notifier
+	handle    int64
 	handler   http.Handler
 	listener  *listener
 	log       *logger.Logger
@@ -131,8 +131,9 @@ func (c *Client) dispatch(payload []byte) error {
 // foo-service would have the URL:
 // 	sleuth://foo-service/bar?baz=qux
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	handle := uuid.New()
 	to := req.URL.Host
+	handle := c.handle
+	c.handle++
 	if req.URL.Scheme != scheme {
 		err := newError(errScheme,
 			"URL scheme must be \"%s\" in %s", scheme, req.URL.String())
@@ -180,7 +181,7 @@ func (c *Client) has(services ...string) bool {
 	return available == total
 }
 
-func (c *Client) listen(handle string, listener chan *http.Response) {
+func (c *Client) listen(handle int64, listener chan *http.Response) {
 	c.listener.Lock()
 	defer c.listener.Unlock()
 	c.listener.handles[handle] = listener
@@ -223,7 +224,7 @@ func (c *Client) reply(payload []byte) error {
 	return nil
 }
 
-func (c *Client) timeout(handle string) {
+func (c *Client) timeout(handle int64) {
 	<-time.After(c.Timeout)
 	c.listener.Lock()
 	defer c.listener.Unlock()
@@ -246,7 +247,7 @@ func newClient(node *gyre.Gyre, out *logger.Logger) *Client {
 		directory: make(map[string]string),
 		listener: &listener{
 			new(sync.Mutex),
-			make(map[string]chan *http.Response)},
+			make(map[int64]chan *http.Response)},
 		log:      out,
 		node:     node,
 		Timeout:  time.Millisecond * 500,

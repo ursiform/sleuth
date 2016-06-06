@@ -12,20 +12,20 @@ import (
 )
 
 type destination struct {
-	handle string
+	handle int64
 	node   string
 }
 
 type request struct {
 	Body     []byte              `json:"body,omitempty"`
-	Handle   string              `json:"handle"`
+	Handle   int64               `json:"handle"`
 	Header   map[string][]string `json:"header"`
 	Method   string              `json:"method"`
 	Receiver string              `json:"receiver"`
 	URL      string              `json:"url"`
 }
 
-func marshalRequest(receiver, handle string, in *http.Request) ([]byte, error) {
+func marshalRequest(receiver string, handle int64, in *http.Request) ([]byte, error) {
 	out := new(request)
 	if in.Body != nil {
 		if body, err := ioutil.ReadAll(in.Body); err == nil {

@@ -138,7 +138,7 @@ func TestClientDoUnknownService(t *testing.T) {
 func TestClientReceiveBadHandle(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
 	c := newClient(nil, log)
-	res := &response{Handle: "foo"}
+	res := &response{Handle: 1}
 	err := c.receive(marshalResponse(res)[len(group)+len(recv):])
 	if err == nil {
 		t.Errorf("expected client receive to fail on bad handle")
@@ -301,7 +301,7 @@ func TestWorkersRemoveNonexistent(t *testing.T) {
 
 func TestWriterWrite(t *testing.T) {
 	data := []byte("foo bar baz")
-	w := newWriter(new(goodWhisperer), &destination{node: "qux", handle: "quux"})
+	w := newWriter(new(goodWhisperer), &destination{node: "qux", handle: 2})
 	if n, err := w.Write(data); err != nil {
 		t.Errorf("expected write to succeed: %s", err.Error())
 	} else if n <= 0 {
@@ -311,7 +311,7 @@ func TestWriterWrite(t *testing.T) {
 
 func TestWriterWriteBadWhisperer(t *testing.T) {
 	data := []byte("foo bar baz")
-	w := newWriter(new(badWhisperer), &destination{node: "qux", handle: "quux"})
+	w := newWriter(new(badWhisperer), &destination{node: "qux", handle: 3})
 	_, err := w.Write(data)
 	if err == nil {
 		t.Errorf("expected writer to fail using bad whisperer")

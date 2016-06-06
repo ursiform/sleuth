@@ -14,7 +14,7 @@ import (
 type response struct {
 	Body   []byte      `json:"body"`
 	Code   int         `json:"code"`
-	Handle string      `json:"handle"`
+	Handle int64       `json:"handle"`
 	Header http.Header `json:"header"`
 }
 
@@ -30,8 +30,8 @@ func marshalResponse(res *response) []byte {
 	return append([]byte(group+recv), zip(marshalled)...)
 }
 
-func unmarshalResponse(payload []byte) (string, *http.Response, error) {
-	var handle string
+func unmarshalResponse(payload []byte) (int64, *http.Response, error) {
+	var handle int64 = -1
 	var res *http.Response
 	unzipped, err := unzip(payload)
 	if err != nil {
