@@ -199,7 +199,7 @@ func (c *Client) receive(payload []byte) error {
 		listener <- res
 		delete(c.listener.handles, handle)
 	} else {
-		return newError(errRECV, "unknown handle %s", handle)
+		return newError(errRECV, "unknown handle %d", handle)
 	}
 	return nil
 }
