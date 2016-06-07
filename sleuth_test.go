@@ -23,8 +23,8 @@ func init() {
 // badWhisperer generates an error when whispering.
 type badWhisperer struct{}
 
-// Whisper allows goodWhisperer to conform to the whisperer interface. It
-// returns and error every time.
+// Whisper allows badWhisperer to conform to the whisperer interface. It
+// returns an error every time.
 func (b *badWhisperer) Whisper(addr string, payload []byte) error {
 	return errors.New("bad whisperer error")
 }
