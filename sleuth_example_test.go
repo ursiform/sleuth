@@ -6,7 +6,7 @@ import (
 	"github.com/ursiform/sleuth"
 )
 
-func Example_Error() {
+func ExampleClient_Do() {
 	config := &sleuth.Config{Interface: "bad"}
 	if _, err := sleuth.New(config); err != nil {
 		fmt.Printf("%v", err.(*sleuth.Error).Codes)
