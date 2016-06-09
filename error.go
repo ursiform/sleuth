@@ -49,14 +49,7 @@ const (
 )
 
 // Error is the type all sleuth errors can be asserted as in order to query
-// the error code trace that resulted in any particular error. For example, a
-// call to the New function may fail and its resultant error can then be
-// checked:
-//	config := &sleuth.Config{Interface: "bad"}
-// 	if _, err := sleuth.New(config); err != nil {
-//  		fmt.Printf("%v", err.(*sleuth.Error).Codes)
-// 	}
-// 	// Output: [905 901 900]
+// the error code trace that resulted in any particular error.
 type Error struct {
 	// Codes contains the list of error codes that led to a specific error.
 	Codes   []int
