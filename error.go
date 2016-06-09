@@ -56,7 +56,7 @@ const (
 // 	if _, err := sleuth.New(config); err != nil {
 //  		fmt.Printf("%v", err.(*sleuth.Error).Codes)
 // 	}
-// 	// Output: [905, 901, 900]
+// 	// Output: [905 901 900]
 type Error struct {
 	// Codes contains the list of error codes that led to a specific error.
 	Codes   []int
