@@ -8,6 +8,8 @@ client that offers no services and as any service that speaks HTTP. Its
 primary use case is for microservices on the same network that make calls to
 one another.
 
+For a full introduction and tutorial, check out: [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/)
+
 ## Installation
 `sleuth` is dependent on [`libzmq`](https://github.com/zeromq/libzmq), which can be installed either from source or from binaries. For more information, please refer to [ØMQ: "Get the Software"](http://zeromq.org/intro:get-the-software) or the [`libzmq` repository](https://github.com/zeromq/libzmq).
 
