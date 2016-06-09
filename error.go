@@ -52,11 +52,11 @@ const (
 // the error code trace that resulted in any particular error. For example, a
 // call to the New function may fail and its resultant error can then be
 // checked:
-// 	err := sleuth.New(nil)
-// 	if err != nil {
-//		fmt.Printf("%v\n", err.(*sleuth.Error).Codes)
-//		// Outputs an integer slice.
+//	config := &sleuth.Config{Interface: "bad"}
+// 	if _, err := sleuth.New(config); err != nil {
+//  		fmt.Printf("%v", err.(*sleuth.Error).Codes)
 // 	}
+// 	// Output: [905, 901, 900]
 type Error struct {
 	// Codes contains the list of error codes that led to a specific error.
 	Codes   []int
@@ -74,7 +74,5 @@ func (e *Error) escalate(code int) *Error {
 }
 
 func newError(code int, format string, v ...interface{}) *Error {
-	err := &Error{Codes: make([]int, 1), message: fmt.Sprintf(format, v...)}
-	err.Codes[0] = code
-	return err
+	return &Error{Codes: []int{code}, message: fmt.Sprintf(format, v...)}
 }
