@@ -31,6 +31,7 @@ type Client struct {
 	Timeout time.Duration
 
 	additions *notifier
+	group     string
 	handle    int64
 	handler   http.Handler
 	listener  *listener

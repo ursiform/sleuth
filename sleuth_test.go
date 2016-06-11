@@ -213,7 +213,7 @@ func TestSleuthNewBadInterface(t *testing.T) {
 		t.Errorf("expected New to fail on start with bad interface")
 		return
 	}
-	testCodes(t, err, []int{errStart, errCreate, errNew})
+	testCodes(t, err, []int{errStart, errNew})
 }
 
 func TestSleuthNewBadLogLevel(t *testing.T) {
@@ -230,7 +230,7 @@ func TestSleuthNewBadPort(t *testing.T) {
 		t.Errorf("expected New to fail on start with bad port")
 		return
 	}
-	testCodes(t, err, []int{errStart, errCreate, errNew})
+	testCodes(t, err, []int{errStart, errNew})
 }
 
 func TestSleuthNewBadService(t *testing.T) {

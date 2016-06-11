@@ -7,12 +7,11 @@ package sleuth
 import "fmt"
 
 const (
-	// Warnings are in the 800-899 range.
+	// Warnings are in the 801-899 range.
 	warnInterface = 801
 	warnClose     = 802
-	// Errors are in the 900-999 range.
-	errNew              = 900
-	errCreate           = 901
+	// Errors are in the 901-999 range.
+	errNew              = 901
 	errDispatch         = 902
 	errService          = 903
 	errInitialize       = 904

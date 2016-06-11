@@ -35,16 +35,6 @@ type connection struct {
 	version string
 }
 
-func create(conn *connection, log *logger.Logger) (*Client, error) {
-	node, err := newNode(log, conn)
-	if err != nil {
-		return nil, err.(*Error).escalate(errCreate)
-	}
-	client := newClient(node, log)
-	client.handler = conn.handler
-	return client, nil
-}
-
 func dispatch(client *Client, event *gyre.Event) (err error) {
 	name := event.Name()
 	switch event.Type() {
@@ -143,10 +133,12 @@ func New(config *Config) (*Client, error) {
 	if conn.version = config.Version; len(conn.version) == 0 {
 		conn.version = "unknown"
 	}
-	client, err := create(conn, log)
+	node, err := newNode(log, conn)
 	if err != nil {
 		return nil, err.(*Error).escalate(errNew)
 	}
+	client := newClient(node, log)
+	client.handler = conn.handler
 	go listen(client)
 	return client, nil
 }
