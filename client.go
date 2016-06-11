@@ -89,6 +89,7 @@ func (c *Client) block(services ...string) bool {
 		}
 	}
 	c.additions.notify = nil
+	c.log.Unblocked("sleuth: found services %s", services)
 	return true
 }
 
@@ -216,7 +217,6 @@ func (c *Client) remove(name string) {
 		c.log.Info("sleuth: remove %s:%s", service, name)
 		return
 	}
-	c.log.Info("sleuth: unable to remove %s", name)
 }
 
 func (c *Client) reply(payload []byte) error {

@@ -26,18 +26,19 @@ type Config struct {
 
 	// LogLevel is the ursiform.Logger level for sleuth. The default is "listen".
 	// The options, in order of increasing verbosity, are:
-	// 	"silent"	No log output at all.
-	// 	"error"		Only errors are logged.
-	// 	"blocked"	Blocking calls and lower are logged.
-	// 	"warn"		Warnings and lower are logged.
-	// 	"reject"	Rejections (e.g., in a firewall) and lower are logged.
-	// 	"listen"	Listeners and lower are logged.
-	// 	"install"	Install notifications and lower are logged.
-	// 	"init"		Initialization notifications and lower are logged.
-	// 	"request"	Incoming requests and lower are logged.
-	// 	"info"		Info output and lower are logged.
-	// 	"verbose"	Verbose output and lower are logged.
-	// 	"debug"		All log output is shown.
+	// 	"silent"		No log output at all.
+	// 	"error"			Only errors are logged.
+	// 	"blocked"		Blocking calls and lower are logged.
+	// 	"unblocked"	Unblocked notifications and lower are logged.
+	// 	"warn"			Warnings and lower are logged.
+	// 	"reject"		Rejections (e.g., in a firewall) and lower are logged.
+	// 	"listen"		Listeners and lower are logged.
+	// 	"install"		Install notifications and lower are logged.
+	// 	"init"			Initialization notifications and lower are logged.
+	// 	"request"		Incoming requests and lower are logged.
+	// 	"info"			Info output and lower are logged.
+	// 	"verbose"		Verbose output and lower are logged.
+	// 	"debug"			All log output is shown.
 	LogLevel string `json:"loglevel,omitempty"`
 
 	// Port is the UDP port that sleuth should broadcast on. The default is 5670.
