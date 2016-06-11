@@ -81,7 +81,7 @@ func (c *Client) block(services ...string) bool {
 	if c.has(services...) {
 		return false
 	}
-	c.log.Blocked("sleuth: waiting for client to find: %s", services)
+	c.log.Blocked("sleuth: waiting for client to find %s", services)
 	c.additions.notify = make(chan struct{})
 	for range c.additions.notify {
 		if c.has(services...) {
@@ -89,7 +89,7 @@ func (c *Client) block(services ...string) bool {
 		}
 	}
 	c.additions.notify = nil
-	c.log.Unblocked("sleuth: client found: %s", services)
+	c.log.Unblocked("sleuth: client found %s", services)
 	return true
 }
 
