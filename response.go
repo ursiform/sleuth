@@ -24,13 +24,13 @@ type body struct {
 
 func (*body) Close() error { return nil }
 
-func marshalRes(group string, res *response) []byte {
+func resMarshal(group string, res *response) []byte {
 	// This will never fail to marshal, so error can be ignored.
 	marshalled, _ := json.Marshal(res)
 	return append([]byte(group+recv), zip(marshalled)...)
 }
 
-func unmarshalRes(payload []byte) (string, *http.Response, error) {
+func resUnmarshal(payload []byte) (string, *http.Response, error) {
 	var handle string
 	var res *http.Response
 	unzipped, err := unzip(payload)

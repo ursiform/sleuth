@@ -136,7 +136,7 @@ func TestClientReceiveBadHandle(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
 	c := newClient(GROUP, nil, log)
 	res := &response{Handle: "1"}
-	err := c.receive(marshalRes(GROUP, res)[len(GROUP)+len(recv):])
+	err := c.receive(resMarshal(GROUP, res)[len(GROUP)+len(recv):])
 	if err == nil {
 		t.Errorf("expected client receive to fail on bad handle")
 		return
@@ -230,9 +230,9 @@ func TestRequestUnmarshalBadJSON(t *testing.T) {
 
 func TestResponseUnmarshalBadJSON(t *testing.T) {
 	payload := zip([]byte("{bad json}"))
-	_, _, err := unmarshalRes(payload)
+	_, _, err := resUnmarshal(payload)
 	if err == nil {
-		t.Errorf("expected unmarshalRes to fail on bad json")
+		t.Errorf("expected resUnmarshal to fail on bad json")
 		return
 	}
 	testCodes(t, err, []int{errResUnmarshalJSON})

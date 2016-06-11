@@ -192,7 +192,7 @@ func (c *Client) listen(handle string, listener chan *http.Response) {
 }
 
 func (c *Client) receive(payload []byte) error {
-	handle, res, err := unmarshalRes(payload)
+	handle, res, err := resUnmarshal(payload)
 	if err != nil {
 		return err.(*Error).escalate(errRECV)
 	}

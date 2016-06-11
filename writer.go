@@ -31,7 +31,7 @@ func (w *writer) Write(data []byte) (int, error) {
 		header.Add("Content-Type", http.DetectContentType(data))
 	}
 	w.output.Body = data
-	payload := marshalRes(w.group, w.output)
+	payload := resMarshal(w.group, w.output)
 	if err := w.whisperer.Whisper(w.peer, payload); err != nil {
 		return 0, newError(errResWhisper, err.Error())
 	}

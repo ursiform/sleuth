@@ -11,12 +11,6 @@ import (
 	"net/http"
 )
 
-type destination struct {
-	group  string
-	handle string
-	node   string
-}
-
 type request struct {
 	Body        []byte              `json:"body,omitempty"`
 	Destination string              `json:"destination"`
