@@ -69,7 +69,7 @@ func TestClientAddBadMember(t *testing.T) {
 	c := newClient(nil, log)
 	err := c.add(group, "foo", "bar", "", "")
 	if err == nil {
-		t.Errorf("expected client dispatch to fail on bad action")
+		t.Errorf("expected client dispatch to fail on bad member")
 		return
 	}
 	testCodes(t, err, []int{errAdd})
@@ -236,7 +236,7 @@ func TestSleuthNewBadPort(t *testing.T) {
 func TestSleuthNewBadService(t *testing.T) {
 	_, err := New(&Config{Handler: http.FileServer(http.Dir("."))})
 	if err == nil {
-		t.Errorf("expected New to fail with bad service")
+		t.Errorf("expected New to fail without a service name in config")
 		return
 	}
 	testCodes(t, err, []int{errService})
@@ -305,7 +305,7 @@ func TestWriterWrite(t *testing.T) {
 	if n, err := w.Write(data); err != nil {
 		t.Errorf("expected write to succeed: %s", err.Error())
 	} else if n <= 0 {
-		t.Errorf("expected (%d) to be greater than 0", n)
+		t.Errorf("expected written length (%d) to be greater than 0", n)
 	}
 }
 
@@ -345,7 +345,7 @@ func TestZipUnzip(t *testing.T) {
 // Test integrated package.
 
 func TestIntegratedCycle(t *testing.T) {
-	// Create client.
+	addr := "sleuth-test-server-one"
 	client, err := New(nil)
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
@@ -356,10 +356,7 @@ func TestIntegratedCycle(t *testing.T) {
 			t.Errorf("client close failed: %s", err.Error())
 		}
 	}(client, t)
-	// Create server.
-	addr := "sleuth-test-server-one"
-	server, err := New(&Config{
-		Handler: new(echoHandler), Service: addr})
+	server, err := New(&Config{Handler: new(echoHandler), Service: addr})
 	if err != nil {
 		t.Errorf("server instantiation failed: %s", err.Error())
 		return
