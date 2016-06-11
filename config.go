@@ -16,6 +16,8 @@ import (
 // optional, but Interface is particularly important to guarantee all peers
 // reside on the same subnet.
 type Config struct {
+	group string
+
 	// Handler is the HTTP handler for a service made available via sleuth.
 	Handler http.Handler `json:"-"`
 
@@ -53,6 +55,9 @@ type Config struct {
 func initConfig(config *Config) *Config {
 	if config == nil {
 		config = new(Config)
+	}
+	if len(config.group) == 0 {
+		config.group = group
 	}
 	if len(config.LogLevel) == 0 {
 		config.LogLevel = "listen"

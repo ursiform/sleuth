@@ -12,6 +12,7 @@ type whisperer interface {
 
 type writer struct {
 	http.ResponseWriter
+	group     string
 	output    *response
 	peer      string
 	whisperer whisperer
@@ -30,7 +31,7 @@ func (w *writer) Write(data []byte) (int, error) {
 		header.Add("Content-Type", http.DetectContentType(data))
 	}
 	w.output.Body = data
-	payload := marshalResponse(w.output)
+	payload := marshalRes(w.group, w.output)
 	if err := w.whisperer.Whisper(w.peer, payload); err != nil {
 		return 0, newError(errResWhisper, err.Error())
 	}
@@ -43,6 +44,7 @@ func (w *writer) WriteHeader(code int) {
 
 func newWriter(node whisperer, dest *destination) *writer {
 	return &writer{
+		group: dest.group,
 		output: &response{
 			Handle: dest.handle,
 			Header: http.Header(make(map[string][]string))},

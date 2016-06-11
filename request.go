@@ -12,21 +12,23 @@ import (
 )
 
 type destination struct {
-	handle int64
+	group  string
+	handle string
 	node   string
 }
 
 type request struct {
-	Body     []byte              `json:"body,omitempty"`
-	Handle   int64               `json:"handle"`
-	Header   map[string][]string `json:"header"`
-	Method   string              `json:"method"`
-	Receiver string              `json:"receiver"`
-	URL      string              `json:"url"`
+	Body        []byte              `json:"body,omitempty"`
+	Destination string              `json:"destination"`
+	Group       string              `json:"group"`
+	Handle      string              `json:"handle"`
+	Header      map[string][]string `json:"header"`
+	Method      string              `json:"method"`
+	URL         string              `json:"url"`
 }
 
-func marshalRequest(receiver string, handle int64, in *http.Request) ([]byte, error) {
-	out := new(request)
+func marshalReq(group, dest, handle string, in *http.Request) ([]byte, error) {
+	out := &request{Group: group}
 	if in.Body != nil {
 		if body, err := ioutil.ReadAll(in.Body); err == nil {
 			out.Body = body
@@ -38,7 +40,7 @@ func marshalRequest(receiver string, handle int64, in *http.Request) ([]byte, er
 	in.URL.Scheme = ""
 	in.URL.Host = ""
 	out.URL = in.URL.String()
-	out.Receiver = receiver
+	out.Destination = dest
 	out.Handle = handle
 	marshalled, err := json.Marshal(out)
 	if err != nil {
@@ -47,7 +49,7 @@ func marshalRequest(receiver string, handle int64, in *http.Request) ([]byte, er
 	return append([]byte(group+repl), zip(marshalled)...), nil
 }
 
-func unmarshalRequest(payload []byte) (*destination, *http.Request, error) {
+func unmarshalReq(payload []byte) (*destination, *http.Request, error) {
 	unzipped, err := unzip(payload)
 	if err != nil {
 		return nil, nil, err.(*Error).escalate(errReqUnmarshal)
@@ -62,7 +64,8 @@ func unmarshalRequest(payload []byte) (*destination, *http.Request, error) {
 	}
 	out.Header = http.Header(in.Header)
 	dest := new(destination)
+	dest.group = in.Group
 	dest.handle = in.Handle
-	dest.node = in.Receiver
+	dest.node = in.Destination
 	return dest, out, nil
 }

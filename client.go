@@ -6,6 +6,7 @@ package sleuth
 
 import (
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 
 type listener struct {
 	*sync.Mutex
-	handles map[int64]chan *http.Response
+	handles map[string]chan *http.Response
 }
 
 type notifier struct {
@@ -42,8 +43,8 @@ type Client struct {
 	services  map[string]*workers // map[service-type]service-workers
 }
 
-func (c *Client) add(gid, name, node, service, version string) error {
-	if gid != group {
+func (c *Client) add(group, name, node, service, version string) error {
+	if group != c.group {
 		c.log.Debug("sleuth: no group header for %s, client-only", name)
 		return nil
 	}
@@ -65,7 +66,7 @@ func (c *Client) add(gid, name, node, service, version string) error {
 	if c.additions.notify != nil {
 		c.additions.notify <- struct{}{}
 	}
-	c.log.Info("sleuth: add %s/%s %s to %s", service, version, name, group)
+	c.log.Info("sleuth: add %s/%s %s to %s", service, version, name, c.group)
 	return nil
 }
 
@@ -93,8 +94,8 @@ func (c *Client) block(services ...string) bool {
 
 // Close leaves the sleuth network and stops the Gyre node.
 func (c *Client) Close() error {
-	c.log.Info("%s leaving %s...", c.node.Name(), group)
-	if err := c.node.Leave(group); err != nil {
+	c.log.Info("%s leaving %s...", c.node.Name(), c.group)
+	if err := c.node.Leave(c.group); err != nil {
 		return newError(errLeave, err.Error())
 	}
 	if err := c.node.Stop(); err != nil {
@@ -107,12 +108,12 @@ func (c *Client) Close() error {
 func (c *Client) dispatch(payload []byte) error {
 	// Returned responses (RECV command) and outstanding requests (REPL command)
 	// have these headers, respectively: SLEUTH-V0RECV and SLEUTH-V0REPL
-	groupLength := len(group)
+	groupLength := len(c.group)
 	dispatchLength := 4
 	headerLength := groupLength + dispatchLength
 	// If the message header does not match the group, bail.
-	if len(payload) < headerLength || string(payload[0:groupLength]) != group {
-		return newError(errDispatchHeader, "bad header")
+	if len(payload) < headerLength || string(payload[0:groupLength]) != c.group {
+		return newError(errDispatchHeader, "bad dispatch header")
 	}
 	action := string(payload[groupLength : groupLength+dispatchLength])
 	switch action {
@@ -121,7 +122,7 @@ func (c *Client) dispatch(payload []byte) error {
 	case repl:
 		return c.reply(payload[headerLength:])
 	default:
-		return newError(errDispatchAction, "bad action: %s", action)
+		return newError(errDispatchAction, "bad dispatch action: %s", action)
 	}
 }
 
@@ -133,7 +134,8 @@ func (c *Client) dispatch(payload []byte) error {
 // 	sleuth://foo-service/bar?baz=qux
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	to := req.URL.Host
-	handle := c.handle
+	// Handles are hexadecimal strings that are incremented by one.
+	handle := strconv.FormatInt(c.handle, 16)
 	c.handle++
 	if req.URL.Scheme != scheme {
 		err := newError(errScheme,
@@ -145,8 +147,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		return nil, newError(errUnknownService, "%s is an unknown service", to)
 	}
 	p := services.next()
-	receiver := c.node.UUID()
-	payload, err := marshalRequest(receiver, handle, req)
+	payload, err := marshalReq(c.group, c.node.UUID(), handle, req)
 	if err != nil {
 		return nil, err.(*Error).escalate(errRequest)
 	}
@@ -182,7 +183,7 @@ func (c *Client) has(services ...string) bool {
 	return available == total
 }
 
-func (c *Client) listen(handle int64, listener chan *http.Response) {
+func (c *Client) listen(handle string, listener chan *http.Response) {
 	c.listener.Lock()
 	defer c.listener.Unlock()
 	c.listener.handles[handle] = listener
@@ -190,7 +191,7 @@ func (c *Client) listen(handle int64, listener chan *http.Response) {
 }
 
 func (c *Client) receive(payload []byte) error {
-	handle, res, err := unmarshalResponse(payload)
+	handle, res, err := unmarshalRes(payload)
 	if err != nil {
 		return err.(*Error).escalate(errRECV)
 	}
@@ -212,12 +213,14 @@ func (c *Client) remove(name string) {
 			delete(c.services, service)
 		}
 		delete(c.directory, name)
-		c.log.Info("sleuth: remove %s (%s) from %s", service, name, group)
+		c.log.Info("sleuth: remove %s:%s", service, name)
+		return
 	}
+	c.log.Info("sleuth: unable to remove %s", name)
 }
 
 func (c *Client) reply(payload []byte) error {
-	dest, req, err := unmarshalRequest(payload)
+	dest, req, err := unmarshalReq(payload)
 	if err != nil {
 		return err.(*Error).escalate(errREPL)
 	}
@@ -225,7 +228,7 @@ func (c *Client) reply(payload []byte) error {
 	return nil
 }
 
-func (c *Client) timeout(handle int64) {
+func (c *Client) timeout(handle string) {
 	<-time.After(c.Timeout)
 	c.listener.Lock()
 	defer c.listener.Unlock()
@@ -242,13 +245,14 @@ func (c *Client) WaitFor(services ...string) {
 	}
 }
 
-func newClient(node *gyre.Gyre, out *logger.Logger) *Client {
+func newClient(group string, node *gyre.Gyre, out *logger.Logger) *Client {
 	return &Client{
 		additions: &notifier{Mutex: new(sync.Mutex)},
 		directory: make(map[string]string),
+		group:     group,
 		listener: &listener{
 			new(sync.Mutex),
-			make(map[int64]chan *http.Response)},
+			make(map[string]chan *http.Response)},
 		log:      out,
 		node:     node,
 		Timeout:  time.Millisecond * 500,

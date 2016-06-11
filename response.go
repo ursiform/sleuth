@@ -14,7 +14,7 @@ import (
 type response struct {
 	Body   []byte      `json:"body"`
 	Code   int         `json:"code"`
-	Handle int64       `json:"handle"`
+	Handle string      `json:"handle"`
 	Header http.Header `json:"header"`
 }
 
@@ -24,14 +24,14 @@ type body struct {
 
 func (*body) Close() error { return nil }
 
-func marshalResponse(res *response) []byte {
+func marshalRes(group string, res *response) []byte {
 	// This will never fail to marshal, so error can be ignored.
 	marshalled, _ := json.Marshal(res)
 	return append([]byte(group+recv), zip(marshalled)...)
 }
 
-func unmarshalResponse(payload []byte) (int64, *http.Response, error) {
-	var handle int64 = -1
+func unmarshalRes(payload []byte) (string, *http.Response, error) {
+	var handle string
 	var res *http.Response
 	unzipped, err := unzip(payload)
 	if err != nil {

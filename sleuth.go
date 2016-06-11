@@ -17,7 +17,7 @@ import (
 	"github.com/zeromq/gyre"
 )
 
-var (
+const (
 	group  = "SLEUTH-v0"
 	port   = 5670
 	recv   = "RECV"
@@ -27,6 +27,7 @@ var (
 
 type connection struct {
 	adapter string
+	group   string
 	handler http.Handler
 	name    string
 	node    string
@@ -63,7 +64,7 @@ func listen(client *Client) {
 	}
 }
 
-func newNode(log *logger.Logger, conn *connection) (*gyre.Gyre, error) {
+func newNode(conn *connection, log *logger.Logger) (*gyre.Gyre, error) {
 	node, err := gyre.New()
 	if err != nil {
 		return nil, newError(errInitialize, err.Error())
@@ -80,7 +81,7 @@ func newNode(log *logger.Logger, conn *connection) (*gyre.Gyre, error) {
 	if conn.server {
 		errors := [...]int{
 			errGroupHeader, errNodeHeader, errServiceHeader, errVersionHeader}
-		values := [...]string{group, node.UUID(), conn.name, conn.version}
+		values := [...]string{conn.group, node.UUID(), conn.name, conn.version}
 		for i, header := range [...]string{"group", "node", "type", "version"} {
 			if err := node.SetHeader(header, values[i]); err != nil {
 				return nil, newError(errors[i], err.Error())
@@ -114,7 +115,7 @@ func New(config *Config) (*Client, error) {
 	// Use the same log level as the instantiator of the client. Because log level
 	// is guaranteed to be correct in initConfig, errors can be ignored.
 	log, _ := logger.New(config.logLevel)
-	conn := new(connection)
+	conn := &connection{group: config.group}
 	if conn.server = config.Handler != nil; conn.server {
 		conn.handler = config.Handler
 		conn.name = config.Service
@@ -133,11 +134,11 @@ func New(config *Config) (*Client, error) {
 	if conn.version = config.Version; len(conn.version) == 0 {
 		conn.version = "unknown"
 	}
-	node, err := newNode(log, conn)
+	node, err := newNode(conn, log)
 	if err != nil {
 		return nil, err.(*Error).escalate(errNew)
 	}
-	client := newClient(node, log)
+	client := newClient(config.group, node, log)
 	client.handler = conn.handler
 	go listen(client)
 	return client, nil

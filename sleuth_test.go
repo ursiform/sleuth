@@ -15,10 +15,7 @@ import (
 	"github.com/ursiform/logger"
 )
 
-func init() {
-	// Tests should run using a different group than production.
-	group = "SLEUTH-vT"
-}
+const GROUP = "SLEUTH-vT"
 
 // badWhisperer generates an error when whispering.
 type badWhisperer struct{}
@@ -66,8 +63,8 @@ func testCodes(t *testing.T, err error, want []int) {
 
 func TestClientAddBadMember(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
-	c := newClient(nil, log)
-	err := c.add(group, "foo", "bar", "", "")
+	c := newClient(GROUP, nil, log)
+	err := c.add(GROUP, "foo", "bar", "", "")
 	if err == nil {
 		t.Errorf("expected client dispatch to fail on bad member")
 		return
@@ -77,8 +74,8 @@ func TestClientAddBadMember(t *testing.T) {
 
 func TestClientDispatchBadAction(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
-	c := newClient(nil, log)
-	err := c.dispatch([]byte(group + "FAIL"))
+	c := newClient(GROUP, nil, log)
+	err := c.dispatch([]byte(GROUP + "FAIL"))
 	if err == nil {
 		t.Errorf("expected client dispatch to fail on bad action")
 		return
@@ -88,7 +85,7 @@ func TestClientDispatchBadAction(t *testing.T) {
 
 func TestClientDispatchEmpty(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
-	c := newClient(nil, log)
+	c := newClient(GROUP, nil, log)
 	err := c.dispatch([]byte{})
 	if err == nil {
 		t.Errorf("expected client dispatch to fail on empty payload")
@@ -98,10 +95,10 @@ func TestClientDispatchEmpty(t *testing.T) {
 }
 
 func TestClientDoTimeout(t *testing.T) {
-	c, _ := New(nil)
+	c, _ := New(&Config{group: GROUP})
 	defer c.Close()
 	service := "foo"
-	c.add(group, "bar", "baz", service, "")
+	c.add(GROUP, "bar", "baz", service, "")
 	req, _ := http.NewRequest("POST", "sleuth://"+service+"/", nil)
 	_, err := c.Do(req)
 	if err == nil {
@@ -113,7 +110,7 @@ func TestClientDoTimeout(t *testing.T) {
 
 func TestClientDoUnknownScheme(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
-	c := newClient(nil, log)
+	c := newClient(GROUP, nil, log)
 	req, _ := http.NewRequest("POST", "foo://bar/baz", nil)
 	_, err := c.Do(req)
 	if err == nil {
@@ -125,7 +122,7 @@ func TestClientDoUnknownScheme(t *testing.T) {
 
 func TestClientDoUnknownService(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
-	c := newClient(nil, log)
+	c := newClient(GROUP, nil, log)
 	req, _ := http.NewRequest("POST", "sleuth://foo/bar", nil)
 	_, err := c.Do(req)
 	if err == nil {
@@ -137,9 +134,9 @@ func TestClientDoUnknownService(t *testing.T) {
 
 func TestClientReceiveBadHandle(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
-	c := newClient(nil, log)
-	res := &response{Handle: 1}
-	err := c.receive(marshalResponse(res)[len(group)+len(recv):])
+	c := newClient(GROUP, nil, log)
+	res := &response{Handle: "1"}
+	err := c.receive(marshalRes(GROUP, res)[len(GROUP)+len(recv):])
 	if err == nil {
 		t.Errorf("expected client receive to fail on bad handle")
 		return
@@ -149,7 +146,7 @@ func TestClientReceiveBadHandle(t *testing.T) {
 
 func TestClientReceiveBadPayload(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
-	c := newClient(nil, log)
+	c := newClient(GROUP, nil, log)
 	err := c.receive([]byte(""))
 	if err == nil {
 		t.Errorf("expected client receive to fail on bad payload")
@@ -158,15 +155,51 @@ func TestClientReceiveBadPayload(t *testing.T) {
 	testCodes(t, err, []int{errUnzip, errResUnmarshal, errRECV})
 }
 
+func TestClientRemove(t *testing.T) {
+	log, _ := logger.New(logger.Silent)
+	c := newClient(GROUP, nil, log)
+	name := "foo"
+	service := "baz"
+	if c.services[service] != nil {
+		t.Errorf("expected workers to be empty")
+		return
+	}
+	c.add(GROUP, name, "node id", service, "v0.0.1")
+	if c.services[service] == nil || !c.services[service].available() {
+		t.Errorf("expected client add to succeed")
+		return
+	}
+	c.remove(name)
+	if c.services[service] != nil {
+		t.Errorf("expected client remove to succeed")
+		return
+	}
+}
+
+func TestClientRemoveNonexistent(t *testing.T) {
+	log, _ := logger.New(logger.Silent)
+	c := newClient(GROUP, nil, log)
+	c.remove("foo") // c.remove is a no op.
+}
+
 func TestClientReplyBadPayload(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
-	c := newClient(nil, log)
+	c := newClient(GROUP, nil, log)
 	err := c.reply([]byte(""))
 	if err == nil {
 		t.Errorf("expected client reply to fail on bad payload")
 		return
 	}
 	testCodes(t, err, []int{errUnzip, errReqUnmarshal, errREPL})
+}
+
+// Test config.go
+func TestInitConfig(t *testing.T) {
+	config := initConfig(nil)
+	if config.group != group {
+		t.Errorf("expected config to default to group: %s", group)
+		return
+	}
 }
 
 // Test error.go
@@ -185,9 +218,9 @@ func TestError(t *testing.T) {
 
 func TestRequestUnmarshalBadJSON(t *testing.T) {
 	payload := zip([]byte("{bad json}"))
-	_, _, err := unmarshalRequest(payload)
+	_, _, err := unmarshalReq(payload)
 	if err == nil {
-		t.Errorf("expected unmarshalRequest to fail on bad json")
+		t.Errorf("expected unmarshalReq to fail on bad json")
 		return
 	}
 	testCodes(t, err, []int{errReqUnmarshalJSON})
@@ -197,9 +230,9 @@ func TestRequestUnmarshalBadJSON(t *testing.T) {
 
 func TestResponseUnmarshalBadJSON(t *testing.T) {
 	payload := zip([]byte("{bad json}"))
-	_, _, err := unmarshalResponse(payload)
+	_, _, err := unmarshalRes(payload)
 	if err == nil {
-		t.Errorf("expected unmarshalResponse to fail on bad json")
+		t.Errorf("expected unmarshalRes to fail on bad json")
 		return
 	}
 	testCodes(t, err, []int{errResUnmarshalJSON})
@@ -208,7 +241,7 @@ func TestResponseUnmarshalBadJSON(t *testing.T) {
 // Test sleuth.go
 
 func TestSleuthNewBadInterface(t *testing.T) {
-	_, err := New(&Config{Interface: "foo"})
+	_, err := New(&Config{group: GROUP, Interface: "foo"})
 	if err == nil {
 		t.Errorf("expected New to fail on start with bad interface")
 		return
@@ -217,7 +250,7 @@ func TestSleuthNewBadInterface(t *testing.T) {
 }
 
 func TestSleuthNewBadLogLevel(t *testing.T) {
-	c, _ := New(&Config{LogLevel: "foo"})
+	c, _ := New(&Config{group: GROUP, LogLevel: "foo"})
 	if c.log.Level() != logger.Debug {
 		t.Errorf("expected log level 'foo' to be coerced to 'debug'")
 		return
@@ -225,7 +258,7 @@ func TestSleuthNewBadLogLevel(t *testing.T) {
 }
 
 func TestSleuthNewBadPort(t *testing.T) {
-	_, err := New(&Config{Port: 1})
+	_, err := New(&Config{group: GROUP, Port: 1})
 	if err == nil {
 		t.Errorf("expected New to fail on start with bad port")
 		return
@@ -234,7 +267,7 @@ func TestSleuthNewBadPort(t *testing.T) {
 }
 
 func TestSleuthNewBadService(t *testing.T) {
-	_, err := New(&Config{Handler: http.FileServer(http.Dir("."))})
+	_, err := New(&Config{group: GROUP, Handler: http.FileServer(http.Dir("."))})
 	if err == nil {
 		t.Errorf("expected New to fail without a service name in config")
 		return
@@ -301,7 +334,10 @@ func TestWorkersRemoveNonexistent(t *testing.T) {
 
 func TestWriterWrite(t *testing.T) {
 	data := []byte("foo bar baz")
-	w := newWriter(new(goodWhisperer), &destination{node: "qux", handle: 2})
+	w := newWriter(new(goodWhisperer), &destination{
+		group:  GROUP,
+		node:   "qux",
+		handle: "2"})
 	if n, err := w.Write(data); err != nil {
 		t.Errorf("expected write to succeed: %s", err.Error())
 	} else if n <= 0 {
@@ -311,7 +347,10 @@ func TestWriterWrite(t *testing.T) {
 
 func TestWriterWriteBadWhisperer(t *testing.T) {
 	data := []byte("foo bar baz")
-	w := newWriter(new(badWhisperer), &destination{node: "qux", handle: 3})
+	w := newWriter(new(badWhisperer), &destination{
+		group:  GROUP,
+		node:   "qux",
+		handle: "3"})
 	_, err := w.Write(data)
 	if err == nil {
 		t.Errorf("expected writer to fail using bad whisperer")
@@ -346,7 +385,7 @@ func TestZipUnzip(t *testing.T) {
 
 func TestIntegratedCycle(t *testing.T) {
 	addr := "sleuth-test-server-one"
-	client, err := New(nil)
+	client, err := New(&Config{group: GROUP})
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -356,7 +395,10 @@ func TestIntegratedCycle(t *testing.T) {
 			t.Errorf("client close failed: %s", err.Error())
 		}
 	}(client, t)
-	server, err := New(&Config{Handler: new(echoHandler), Service: addr})
+	server, err := New(&Config{
+		group:   GROUP,
+		Handler: new(echoHandler),
+		Service: addr})
 	if err != nil {
 		t.Errorf("server instantiation failed: %s", err.Error())
 		return
