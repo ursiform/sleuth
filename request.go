@@ -21,7 +21,7 @@ type request struct {
 	URL         string              `json:"url"`
 }
 
-func marshalReq(group, dest, handle string, in *http.Request) ([]byte, error) {
+func reqMarshal(group, dest, handle string, in *http.Request) ([]byte, error) {
 	out := &request{Group: group}
 	if in.Body != nil {
 		if body, err := ioutil.ReadAll(in.Body); err == nil {
@@ -43,7 +43,7 @@ func marshalReq(group, dest, handle string, in *http.Request) ([]byte, error) {
 	return append([]byte(group+repl), zip(marshalled)...), nil
 }
 
-func unmarshalReq(payload []byte) (*destination, *http.Request, error) {
+func reqUnmarshal(payload []byte) (*destination, *http.Request, error) {
 	unzipped, err := unzip(payload)
 	if err != nil {
 		return nil, nil, err.(*Error).escalate(errReqUnmarshal)

@@ -148,7 +148,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		return nil, newError(errUnknownService, "%s is an unknown service", to)
 	}
 	p := services.next()
-	payload, err := marshalReq(c.group, c.node.UUID(), handle, req)
+	payload, err := reqMarshal(c.group, c.node.UUID(), handle, req)
 	if err != nil {
 		return nil, err.(*Error).escalate(errRequest)
 	}
@@ -220,7 +220,7 @@ func (c *Client) remove(name string) {
 }
 
 func (c *Client) reply(payload []byte) error {
-	dest, req, err := unmarshalReq(payload)
+	dest, req, err := reqUnmarshal(payload)
 	if err != nil {
 		return err.(*Error).escalate(errREPL)
 	}
