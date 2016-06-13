@@ -30,10 +30,10 @@ func resMarshal(group string, res *response) []byte {
 	return append([]byte(group+recv), zip(marshalled)...)
 }
 
-func resUnmarshal(payload []byte) (string, *http.Response, error) {
+func resUnmarshal(p []byte) (string, *http.Response, error) {
 	var handle string
 	var res *http.Response
-	unzipped, err := unzip(payload)
+	unzipped, err := unzip(p)
 	if err != nil {
 		return handle, res, err.(*Error).escalate(errResUnmarshal)
 	}

@@ -218,7 +218,7 @@ func TestError(t *testing.T) {
 
 func TestRequestUnmarshalBadJSON(t *testing.T) {
 	payload := zip([]byte("{bad json}"))
-	_, _, err := reqUnmarshal(payload)
+	_, _, err := reqUnmarshal(GROUP, payload)
 	if err == nil {
 		t.Errorf("expected unmarshalReq to fail on bad json")
 		return

@@ -14,7 +14,6 @@ import (
 type request struct {
 	Body        []byte              `json:"body,omitempty"`
 	Destination string              `json:"destination"`
-	Group       string              `json:"group"`
 	Handle      string              `json:"handle"`
 	Header      map[string][]string `json:"header"`
 	Method      string              `json:"method"`
@@ -22,7 +21,7 @@ type request struct {
 }
 
 func reqMarshal(group, dest, handle string, in *http.Request) ([]byte, error) {
-	out := &request{Group: group}
+	out := &request{}
 	if in.Body != nil {
 		if body, err := ioutil.ReadAll(in.Body); err == nil {
 			out.Body = body
@@ -43,8 +42,8 @@ func reqMarshal(group, dest, handle string, in *http.Request) ([]byte, error) {
 	return append([]byte(group+repl), zip(marshalled)...), nil
 }
 
-func reqUnmarshal(payload []byte) (*destination, *http.Request, error) {
-	unzipped, err := unzip(payload)
+func reqUnmarshal(group string, p []byte) (*destination, *http.Request, error) {
+	unzipped, err := unzip(p)
 	if err != nil {
 		return nil, nil, err.(*Error).escalate(errReqUnmarshal)
 	}
@@ -58,7 +57,7 @@ func reqUnmarshal(payload []byte) (*destination, *http.Request, error) {
 	}
 	out.Header = http.Header(in.Header)
 	dest := new(destination)
-	dest.group = in.Group
+	dest.group = group
 	dest.handle = in.Handle
 	dest.node = in.Destination
 	return dest, out, nil

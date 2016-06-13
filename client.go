@@ -220,7 +220,7 @@ func (c *Client) remove(name string) {
 }
 
 func (c *Client) reply(payload []byte) error {
-	dest, req, err := reqUnmarshal(payload)
+	dest, req, err := reqUnmarshal(c.group, payload)
 	if err != nil {
 		return err.(*Error).escalate(errREPL)
 	}
