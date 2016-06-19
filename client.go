@@ -214,7 +214,6 @@ func (c *Client) remove(name string) {
 		}
 		delete(c.directory, name)
 		c.log.Info("sleuth: remove %s:%s", service, name)
-		return
 	}
 }
 
