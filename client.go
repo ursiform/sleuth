@@ -127,8 +127,8 @@ func (c *Client) dispatch(payload []byte) error {
 	}
 }
 
-// Do sends an HTTP request to a service and returns and HTTP response. The URL
-// for requests needs to use the following format:
+// Do sends an HTTP request to a service and returns an HTTP response. URLs for
+// requests use the following format:
 // 	sleuth://service-name/requested-path
 // For example, a request to the path /bar?baz=qux of a service called
 // foo-service would have the URL:
