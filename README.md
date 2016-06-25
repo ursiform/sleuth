@@ -1,4 +1,5 @@
-# sleuth <img src="https://cdn.rawgit.com/ursiform/sleuth/662e1c96d211b0d27c30fbfa043edc4b3bd6c35d/logo.svg" height="50" valign="middle"> [![API documentation](https://godoc.org/github.com/ursiform/sleuth?status.svg)](https://godoc.org/github.com/ursiform/sleuth) [![Coverage Status](https://coveralls.io/repos/github/ursiform/sleuth/badge.svg)](https://coveralls.io/github/ursiform/sleuth?branch=master)
+# sleuth <img src="https://cdn.rawgit.com/ursiform/sleuth/662e1c96d211b0d27c30fbfa043edc4b3bd6c35d/logo.svg" height="50" valign="middle">
+[![API documentation](https://godoc.org/github.com/ursiform/sleuth?status.svg)](https://godoc.org/github.com/ursiform/sleuth) [![Coverage Status](https://coveralls.io/repos/github/ursiform/sleuth/badge.svg)](https://coveralls.io/github/ursiform/sleuth?branch=master)
 
 
 `sleuth` is a Go library that provides master-less peer-to-peer autodiscovery and RPC
@@ -20,6 +21,13 @@ Once `libzmq` is available on a system, `sleuth` can be installed like any other
 ```
 go get -u github.com/ursiform/sleuth
 ```
+## API
+The [`sleuth` API documentation is available on GoDoc](https://godoc.org/github.com/ursiform/sleuth) or you can simply run:
+
+```
+godoc github.com/ursiform/sleuth
+```
+
 
 ## Examples
 **Example (1):** The `echo-service` is a toy service that merely echoes back anything in an HTTP request body. It has made itself available on a `sleuth` network:
