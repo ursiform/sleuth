@@ -337,7 +337,8 @@ func TestWriterWrite(t *testing.T) {
 	w := newWriter(new(goodWhisperer), &destination{
 		group:  GROUP,
 		node:   "qux",
-		handle: "2"})
+		handle: "2",
+	})
 	if n, err := w.Write(data); err != nil {
 		t.Errorf("expected write to succeed: %s", err.Error())
 	} else if n <= 0 {
@@ -350,7 +351,8 @@ func TestWriterWriteBadWhisperer(t *testing.T) {
 	w := newWriter(new(badWhisperer), &destination{
 		group:  GROUP,
 		node:   "qux",
-		handle: "3"})
+		handle: "3",
+	})
 	_, err := w.Write(data)
 	if err == nil {
 		t.Errorf("expected writer to fail using bad whisperer")
@@ -398,7 +400,8 @@ func TestIntegratedCycle(t *testing.T) {
 	server, err := New(&Config{
 		group:   GROUP,
 		Handler: new(echoHandler),
-		Service: addr})
+		Service: addr,
+	})
 	if err != nil {
 		t.Errorf("server instantiation failed: %s", err.Error())
 		return

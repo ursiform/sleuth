@@ -254,5 +254,6 @@ func newClient(group string, node *gyre.Gyre, out *logger.Logger) *Client {
 		log:      out,
 		node:     node,
 		Timeout:  time.Millisecond * 500,
-		services: make(map[string]*workers)}
+		services: make(map[string]*workers),
+	}
 }

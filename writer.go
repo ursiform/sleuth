@@ -49,5 +49,6 @@ func newWriter(node whisperer, dest *destination) *writer {
 			Handle: dest.handle,
 			Header: http.Header(make(map[string][]string))},
 		peer:      dest.node,
-		whisperer: node}
+		whisperer: node,
+	}
 }
