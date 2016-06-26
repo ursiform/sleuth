@@ -113,6 +113,16 @@ A complete tutorial based on that example can be found here: [Service autodiscov
     go test -cover github.com/ursiform/sleuth
 
 ## Q & A
+**Q**: How does it work?
+
+**A**: Services that instantiate a `sleuth.Client` create an ad hoc [`Gyre`](https://github.com/zeromq/gyre) network. `Gyre` is the Go port of the [`Zyre`](https://github.com/zeromq/zyre) project, which is built on top of [ØMQ](https://github.com/zeromq/libzmq) (ZeroMQ). Nodes in the network discover each other using a UDP beacon on port `5670`. The actual communication between nodes happens on ephemeral `TCP` connections. What `sleuth` does is to manage this life cycle:
+* A peer joins the `Gyre` network as a member of the group `SLEUTH-v0`. If the peer offers a service, *i.e.*, if it has an [`http.Handler`](https://golang.org/pkg/net/http/#Handler), it notifies the rest of the network when it announces itself. The peer might have no service to offer, thus operating in client-only mode, or it may offer *one* service.
+* The peer finds other peers on the network. If you have asked the [`sleuth` client to `WaitFor`](https://godoc.org/github.com/ursiform/sleuth#Client.WaitFor) one or more services to appear before continuing, that call will block until it has found those services.
+* If the peer is offering a service, `sleuth` automatically listens for incoming requests in a separate goroutine and responds to incoming requests by invoking the [`http.Handler`](https://golang.org/pkg/net/http/#Handler) that was passed in during instantiation.
+* When you make a request to an available service is made, `sleuth` marshals the request, sends it to one of the available peers that offers that service and waits for a response. If the response succeeds, it returns an `http.Reponse`; if it times out, it returns an error. The [`sleuth` client `Do`](https://godoc.org/github.com/ursiform/sleuth#Client.Do) method has the same signature as the [`http` client `Do`](https://golang.org/pkg/net/http/#Client.Do) method in order to operate as a drop-in replacement.
+* When you want to *leave* the network, *e.g.*, when the application is quitting, the [`sleuth` client `Close`](https://godoc.org/github.com/ursiform/sleuth#Client.Close) method immediately notifies the rest of the network that the peer is leaving. This is not strictly necessary because peers regularly check in to make sure the network knows they are alive, so the network automatically knows if a service has disappeared; but it is a good idea.
+
+---
 
 **Q**: What is the messaging protocol `sleuth` uses?
 
@@ -128,7 +138,7 @@ A complete tutorial based on that example can be found here: [Service autodiscov
 
 **Q**: What happens if a service goes offline?
 
-**A**: Whenever possible, a service should call its client's `Close()` method before exiting to notify the network of its departure. But even if a service fails to do that, the `sleuth` network's underlying `Gyre` network will detect within about one second that a peer has disappeared. All requests to that service will be routed to other peers offering the same service. If no peers exist for that service, then calls to `Do()` will return an unknown service error (code `919`), which means that if you're already handling errors when making requests, you're covered.
+**A**: Whenever possible, a service should call its [client's `Close`](https://godoc.org/github.com/ursiform/sleuth#Client.Close) method before exiting to notify the network of its departure. But even if a service fails to do that, the `sleuth` network's underlying `Gyre` network will detect within about one second that a peer has disappeared. All requests to that service will be routed to other peers offering the same service. If no peers exist for that service, then requests (which are made by calling the [`sleuth` client `Do`](https://godoc.org/github.com/ursiform/sleuth#Client.Do) method) will return an unknown service error (code `919`), which means that if you're already handling errors when making requests, you're covered.
 
 ---
 
