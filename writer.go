@@ -27,7 +27,7 @@ func (w *writer) Write(data []byte) (int, error) {
 		w.WriteHeader(http.StatusOK)
 	}
 	header := w.Header()
-	if len(header.Get("Content-Type")) == 0 {
+	if header.Get("Content-Type") == "" {
 		header.Add("Content-Type", http.DetectContentType(data))
 	}
 	w.output.Body = data

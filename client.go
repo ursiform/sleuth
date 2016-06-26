@@ -49,9 +49,9 @@ func (c *Client) add(group, name, node, service, version string) error {
 		return nil
 	}
 	// Node and service are required. Version is optional.
-	if len(node) == 0 || len(service) == 0 {
+	if node == "" || service == "" {
 		return newError(errAdd, "failed to add %s node?=%t, type?=%t",
-			name, len(node) > 0, len(service) > 0)
+			name, node != "", service != "")
 	}
 	// Associate the node name with its service in the directory.
 	c.directory[name] = service

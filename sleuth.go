@@ -72,7 +72,7 @@ func newNode(conn *connection, log *logger.Logger) (*gyre.Gyre, error) {
 	if err := node.SetPort(conn.port); err != nil {
 		return nil, newError(errPort, err.Error())
 	}
-	if len(conn.adapter) > 0 {
+	if conn.adapter != "" {
 		if err := node.SetInterface(conn.adapter); err != nil {
 			return nil, newError(errInterface, err.Error())
 		}
@@ -119,19 +119,19 @@ func New(config *Config) (*Client, error) {
 	if conn.server = config.Handler != nil; conn.server {
 		conn.handler = config.Handler
 		conn.name = config.Service
-		if len(conn.name) == 0 {
+		if conn.name == "" {
 			return nil, newError(errService, "config.Service not defined")
 		}
 	} else {
 		log.Init("sleuth: config.Handler is nil, client-only mode")
 	}
-	if conn.adapter = config.Interface; len(conn.adapter) == 0 {
+	if conn.adapter = config.Interface; conn.adapter == "" {
 		log.Warn("sleuth: config.Interface not defined [%d]", warnInterface)
 	}
 	if conn.port = config.Port; conn.port == 0 {
 		conn.port = port
 	}
-	if conn.version = config.Version; len(conn.version) == 0 {
+	if conn.version = config.Version; conn.version == "" {
 		conn.version = "unknown"
 	}
 	node, err := newNode(conn, log)

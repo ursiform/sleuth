@@ -56,10 +56,10 @@ func initConfig(config *Config) *Config {
 	if config == nil {
 		config = new(Config)
 	}
-	if len(config.group) == 0 {
+	if config.group == "" {
 		config.group = group
 	}
-	if len(config.LogLevel) == 0 {
+	if config.LogLevel == "" {
 		config.LogLevel = "listen"
 	}
 	if level, ok := logger.LogLevel[config.LogLevel]; !ok {
