@@ -72,6 +72,20 @@ func TestClientAddBadMember(t *testing.T) {
 	testCodes(t, err, []int{errAdd})
 }
 
+func TestClientCloseMultipleError(t *testing.T) {
+	c, _ := New(&Config{group: GROUP})
+	if err := c.Close(); err != nil {
+		t.Errorf("expected client close to succeed the first time")
+		return
+	}
+	err := c.Close()
+	if err == nil {
+		t.Errorf("expected client close to fail after first time")
+		return
+	}
+	testCodes(t, err, []int{errClosed})
+}
+
 func TestClientDispatchBadAction(t *testing.T) {
 	log, _ := logger.New(logger.Silent)
 	c := newClient(GROUP, nil, log)

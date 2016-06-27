@@ -32,6 +32,7 @@ type Client struct {
 	Timeout time.Duration
 
 	additions *notifier
+	closed    bool
 	group     string
 	handle    int64
 	handler   http.Handler
@@ -93,8 +94,13 @@ func (c *Client) block(services ...string) bool {
 	return true
 }
 
-// Close leaves the sleuth network and stops the Gyre node.
+// Close leaves the sleuth network and stops the Gyre node. It can only be
+// called once, even if it returns an error the first time it is called.
 func (c *Client) Close() error {
+	defer func(c *Client) { c.closed = true }(c)
+	if c.closed {
+		return newError(errClosed, "client is already closed")
+	}
 	c.log.Info("%s leaving %s...", c.node.Name(), c.group)
 	if err := c.node.Leave(c.group); err != nil {
 		return newError(errLeave, err.Error())
