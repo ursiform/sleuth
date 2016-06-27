@@ -112,8 +112,7 @@ func newNode(conn *connection, log *logger.Logger) (*gyre.Gyre, error) {
 func New(config *Config) (*Client, error) {
 	// Sanitize the configuration object.
 	config = initConfig(config)
-	// Use the same log level as the instantiator of the client. Because log level
-	// is guaranteed to be correct in initConfig, errors can be ignored.
+	// Ignore errors because log level is guaranteed to be correct in initConfig.
 	log, _ := logger.New(config.logLevel)
 	conn := &connection{group: config.group}
 	if conn.server = config.Handler != nil; conn.server {
