@@ -140,6 +140,9 @@ func (c *Client) dispatch(payload []byte) error {
 // foo-service would have the URL:
 // 	sleuth://foo-service/bar?baz=qux
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
+	if c.closed {
+		return nil, newError(errClosed, "client is closed").escalate(errRequest)
+	}
 	to := req.URL.Host
 	// Handles are hexadecimal strings that are incremented by one.
 	handle := strconv.FormatInt(c.handle, 16)
@@ -243,10 +246,14 @@ func (c *Client) timeout(handle string) {
 }
 
 // WaitFor blocks until the required services are available to the client.
-func (c *Client) WaitFor(services ...string) {
+func (c *Client) WaitFor(services ...string) error {
+	if c.closed {
+		return newError(errClosed, "client is closed").escalate(errWait)
+	}
 	if !c.has(services...) {
 		c.block(services...)
 	}
+	return nil
 }
 
 func newClient(group string, node *gyre.Gyre, out *logger.Logger) *Client {

@@ -46,6 +46,7 @@ const (
 	errUnzipRead        = 933
 	errRequest          = 934
 	errClosed           = 935
+	errWait             = 936
 )
 
 // Error is the type all sleuth errors can be asserted as in order to query

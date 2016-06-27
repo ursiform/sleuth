@@ -108,6 +108,19 @@ func TestClientDispatchEmpty(t *testing.T) {
 	testCodes(t, err, []int{errDispatchHeader})
 }
 
+func TestClientDoClosed(t *testing.T) {
+	log, _ := logger.New(logger.Silent)
+	c := newClient(GROUP, nil, log)
+	c.closed = true
+	req, _ := http.NewRequest("POST", "sleuth://foo/bar", nil)
+	_, err := c.Do(req)
+	if err == nil {
+		t.Errorf("expected client Do to fail when client is closed")
+		return
+	}
+	testCodes(t, err, []int{errClosed, errRequest})
+}
+
 func TestClientDoTimeout(t *testing.T) {
 	c, _ := New(&Config{group: GROUP})
 	defer c.Close()
@@ -205,6 +218,17 @@ func TestClientReplyBadPayload(t *testing.T) {
 		return
 	}
 	testCodes(t, err, []int{errUnzip, errReqUnmarshal, errREPL})
+}
+
+func TestClientWaitForClosed(t *testing.T) {
+	c := newClient(GROUP, nil, nil)
+	c.closed = true
+	err := c.WaitFor("foo")
+	if err == nil {
+		t.Errorf("expected client wait to return an error if closed")
+		return
+	}
+	testCodes(t, err, []int{errClosed, errWait})
 }
 
 // Test config.go
