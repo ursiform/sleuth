@@ -141,28 +141,27 @@ func (c *Client) dispatch(payload []byte) error {
 // 	sleuth://foo-service/bar?baz=qux
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if c.closed {
-		return nil, newError(errClosed, "client is closed").escalate(errRequest)
+		return nil, newError(errClosed, "client is closed").escalate(errDo)
 	}
+	url := req.URL.String()
 	to := req.URL.Host
 	// Handles are hexadecimal strings that are incremented by one.
 	handle := strconv.FormatInt(c.handle, 16)
 	c.handle++
 	if req.URL.Scheme != scheme {
-		err := newError(errScheme,
-			"URL scheme must be \"%s\" in %s", scheme, req.URL.String())
+		err := newError(errScheme, "URL scheme must be \"%s\" in %s", scheme, url)
 		return nil, err
 	}
 	services, ok := c.services[to]
 	if !ok {
 		return nil, newError(errUnknownService, "%s is an unknown service", to)
 	}
-	p := services.next()
 	payload, err := reqMarshal(c.group, c.node.UUID(), handle, req)
 	if err != nil {
-		return nil, err.(*Error).escalate(errRequest)
+		return nil, err.(*Error).escalate(errDo)
 	}
-	c.log.Debug("sleuth: %s %s://%s@%s%s",
-		req.Method, scheme, to, p.name, req.URL.String())
+	p := services.next()
+	c.log.Debug("sleuth: %s %s://%s@%s%s", req.Method, scheme, to, p.name, url)
 	if err = c.node.Whisper(p.node, payload); err != nil {
 		return nil, newError(errReqWhisper, err.Error())
 	}
@@ -172,8 +171,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if response != nil {
 		return response, nil
 	}
-	return nil, newError(errTimeout,
-		"%s {%s}%s timed out", req.Method, to, req.URL.String())
+	return nil, newError(errTimeout, "%s {%s}%s timed out", req.Method, to, url)
 }
 
 func (c *Client) has(services ...string) bool {

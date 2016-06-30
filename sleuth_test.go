@@ -118,7 +118,7 @@ func TestClientDoClosed(t *testing.T) {
 		t.Errorf("expected client Do to fail when client is closed")
 		return
 	}
-	testCodes(t, err, []int{errClosed, errRequest})
+	testCodes(t, err, []int{errClosed, errDo})
 }
 
 func TestClientDoTimeout(t *testing.T) {

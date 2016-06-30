@@ -44,7 +44,7 @@ const (
 	errLeave            = 931
 	errUnzip            = 932
 	errUnzipRead        = 933
-	errRequest          = 934
+	errDo               = 934
 	errClosed           = 935
 	errWait             = 936
 )
