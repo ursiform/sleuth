@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	group  = "SLEUTH-v0"
+	group  = "SLEUTH-v1"
 	port   = 5670
 	recv   = "RECV"
 	repl   = "REPL"
@@ -91,7 +91,7 @@ func newNode(conn *connection, log *logger.Logger) (*gyre.Gyre, error) {
 	if err := node.Start(); err != nil {
 		return nil, newError(errStart, err.Error())
 	}
-	if err := node.Join(group); err != nil {
+	if err := node.Join(conn.group); err != nil {
 		node.Stop()
 		return nil, newError(errJoin, err.Error())
 	}
@@ -101,7 +101,7 @@ func newNode(conn *connection, log *logger.Logger) (*gyre.Gyre, error) {
 	} else {
 		role = "client-only"
 	}
-	log.Listen("sleuth: [%s:%d][%s %s]", group, conn.port, role, node.Name())
+	log.Listen("sleuth: [%s:%d][%s %s]", conn.group, conn.port, role, node.Name())
 	return node, nil
 }
 
