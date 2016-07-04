@@ -161,7 +161,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		return nil, err.(*Error).escalate(errDo)
 	}
 	p := services.next()
-	c.log.Debug("sleuth: %s %s://%s@%s%s", req.Method, scheme, to, p.name, url)
+	c.log.Debug("sleuth: %s %s via %s", req.Method, url, p.name)
 	if err = c.node.Whisper(p.node, payload); err != nil {
 		return nil, newError(errReqWhisper, err.Error())
 	}
