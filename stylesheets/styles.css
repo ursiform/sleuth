@@ -110,6 +110,15 @@ header {
   -webkit-font-smoothing:subpixel-antialiased;
 }
 
+header .repo {
+  background: #f4f4f4;
+  border:1px solid #e0e0e0;
+  border-radius:5px;
+  padding: 5px;
+  text-align: center;
+  width: 230px;
+}
+
 header ul {
   list-style:none;
   height:40px;
@@ -118,10 +127,11 @@ header ul {
   border-radius:5px;
   border:1px solid #e0e0e0;
   width:240px;
+  display: flex;
 }
 
 header li {
-  width:79px;
+  flex-grow: 1;
   float:left;
   border-right:1px solid #e0e0e0;
   height:40px;
@@ -129,6 +139,10 @@ header li {
 
 header li:first-child a {
   border-radius:5px 0 0 5px;
+}
+
+header li:last-child {
+  border-right: 0;
 }
 
 header li:last-child a {
@@ -158,11 +172,6 @@ strong {
   font-weight:700;
 }
 
-header ul li + li + li {
-  border-right:none;
-  width:79px;
-}
-
 header ul a strong {
   font-size:14px;
   display:block;
@@ -187,10 +196,12 @@ hr {
 }
 
 footer {
-  width:270px;
+  font-size: 12px;
+  width:240px;
   float:left;
+  text-align:center;
   position:fixed;
-  bottom:50px;
+  bottom:0px;
   -webkit-font-smoothing:subpixel-antialiased;
 }
 
