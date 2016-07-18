@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Sleuth by ursiform</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Sleuth</h1>
+        <h2>A Go library for master-less peer-to-peer autodiscovery and RPC between HTTP services</h2>
+        <a href="https://github.com/ursiform/sleuth" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a id="sleuth-" class="anchor" href="#sleuth-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>sleuth <img src="https://cdn.rawgit.com/ursiform/sleuth/662e1c96d211b0d27c30fbfa043edc4b3bd6c35d/logo.svg" height="50" valign="middle">
+</h1>
+
+<p><a href="https://godoc.org/github.com/ursiform/sleuth"><img src="https://godoc.org/github.com/ursiform/sleuth?status.svg" alt="API documentation"></a> <a href="https://coveralls.io/github/ursiform/sleuth?branch=master"><img src="https://coveralls.io/repos/github/ursiform/sleuth/badge.svg" alt="Coverage Status"></a></p>
+
+<p><code>sleuth</code> is a Go library that provides master-less peer-to-peer autodiscovery and RPC
+between HTTP services that reside on the same network. It works with minimal
+configuration and provides a mechanism to join a local network both as a
+client that offers no services and as any service that speaks HTTP. Its
+primary use case is for microservices on the same network that make calls to
+one another.</p>
+
+<p>For a full introduction and tutorial, check out: <a href="http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/">Service autodiscovery in Go with sleuth</a></p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<p><code>sleuth</code> is dependent on <a href="https://github.com/zeromq/libzmq"><code>libzmq</code></a>, which can be installed either from source or from binaries. For more information, please refer to <a href="http://zeromq.org/intro:get-the-software">ØMQ: "Get the Software"</a> or the <a href="https://github.com/zeromq/libzmq"><code>libzmq</code> repository</a>.</p>
+
+<p>Another option is to use a <a href="https://hub.docker.com/r/rxwen/golang-zeromq/">Docker container that comes with Go and ZeroMQ</a>.</p>
+
+<p>Once <code>libzmq</code> is available on a system, <code>sleuth</code> can be installed like any other Go library:</p>
+
+<pre><code>go get -u github.com/ursiform/sleuth
+</code></pre>
+
+<h2>
+<a id="api" class="anchor" href="#api" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API</h2>
+
+<p>The <a href="https://godoc.org/github.com/ursiform/sleuth"><code>sleuth</code> API documentation is available on GoDoc</a> or you can simply run:</p>
+
+<pre><code>godoc github.com/ursiform/sleuth
+</code></pre>
+
+<h2>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Examples</h2>
+
+<p><strong>Example (1):</strong> The <code>echo-service</code> is a toy service that merely echoes back anything in an HTTP request body. It has made itself available on a <code>sleuth</code> network:</p>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+  <span class="pl-s"><span class="pl-pds">"</span>io/ioutil<span class="pl-pds">"</span></span>
+  <span class="pl-s"><span class="pl-pds">"</span>net/http<span class="pl-pds">"</span></span>
+
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/ursiform/sleuth<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">type</span> echoHandler <span class="pl-k">struct</span>{}
+
+<span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">h</span> *<span class="pl-v">echoHandler</span>) <span class="pl-en">ServeHTTP</span></span>(<span class="pl-v">res</span> <span class="pl-v">http</span>.<span class="pl-v">ResponseWriter</span>, <span class="pl-v">req</span> *<span class="pl-v">http</span>.<span class="pl-v">Request</span>) {
+  <span class="pl-smi">body</span>, <span class="pl-smi">_</span> <span class="pl-k">:=</span> ioutil.<span class="pl-c1">ReadAll</span>(req.<span class="pl-smi">Body</span>)
+  res.<span class="pl-c1">Write</span>(body)
+}
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+  <span class="pl-smi">handler</span> <span class="pl-k">:=</span> <span class="pl-c1">new</span>(echoHandler)
+  <span class="pl-c">// In the real world, the Interface field of the sleuth.Config object</span>
+  <span class="pl-c">// should be set so that all services are on the same subnet.</span>
+  <span class="pl-smi">config</span> <span class="pl-k">:=</span> &amp;sleuth.<span class="pl-smi">Config</span>{Handler: handler, Service: <span class="pl-s"><span class="pl-pds">"</span>echo-service<span class="pl-pds">"</span></span>}
+  <span class="pl-smi">server</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> sleuth.<span class="pl-c1">New</span>(config)
+  <span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+    <span class="pl-c1">panic</span>(err.<span class="pl-c1">Error</span>())
+  }
+  <span class="pl-k">defer</span> server.<span class="pl-c1">Close</span>()
+  http.<span class="pl-c1">ListenAndServe</span>(<span class="pl-s"><span class="pl-pds">"</span>:9873<span class="pl-pds">"</span></span>, handler)
+}</pre></div>
+
+<p>And here is a trivial client that waits until it has connected to the network and found the <code>echo-service</code> to make a request before it exits. Note that the <code>*sleuth.Client</code> works as a drop-in replacement for an <code>*http.Client</code> when making requests using the <code>Do()</code> method:</p>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+    <span class="pl-s"><span class="pl-pds">"</span>bytes<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span>io/ioutil<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span>net/http<span class="pl-pds">"</span></span>
+
+    <span class="pl-s"><span class="pl-pds">"</span>github.com/ursiform/sleuth<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    <span class="pl-smi">service</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>echo-service<span class="pl-pds">"</span></span>
+    <span class="pl-c">// In the real world, the Interface field of the sleuth.Config object</span>
+    <span class="pl-c">// should be set so that all services are on the same subnet.</span>
+    <span class="pl-smi">config</span> <span class="pl-k">:=</span> &amp;sleuth.<span class="pl-smi">Config</span>{LogLevel: <span class="pl-s"><span class="pl-pds">"</span>silent<span class="pl-pds">"</span></span>}
+    <span class="pl-smi">client</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> sleuth.<span class="pl-c1">New</span>(config)
+    <span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+        <span class="pl-c1">panic</span>(err.<span class="pl-c1">Error</span>())
+    }
+    <span class="pl-k">defer</span> client.<span class="pl-c1">Close</span>()
+    client.<span class="pl-c1">WaitFor</span>(service)
+    <span class="pl-smi">input</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>This is the value I am inputting.<span class="pl-pds">"</span></span>
+    <span class="pl-smi">body</span> <span class="pl-k">:=</span> bytes.<span class="pl-c1">NewBuffer</span>([]<span class="pl-k">byte</span>(input))
+    <span class="pl-smi">request</span>, <span class="pl-smi">_</span> <span class="pl-k">:=</span> http.<span class="pl-c1">NewRequest</span>(<span class="pl-s"><span class="pl-pds">"</span>POST<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>sleuth://<span class="pl-pds">"</span></span>+service+<span class="pl-s"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>, body)
+    <span class="pl-smi">response</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> client.<span class="pl-c1">Do</span>(request)
+    <span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+        <span class="pl-c1">panic</span>(err.<span class="pl-c1">Error</span>())
+    }
+    <span class="pl-smi">output</span>, <span class="pl-smi">_</span> <span class="pl-k">:=</span> ioutil.<span class="pl-c1">ReadAll</span>(response.<span class="pl-smi">Body</span>)
+    <span class="pl-k">if</span> <span class="pl-k">string</span>(output) == input {
+        fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"</span>It works.<span class="pl-pds">"</span></span>)
+    } <span class="pl-k">else</span> {
+        fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"</span>It doesn't work.<span class="pl-pds">"</span></span>)
+    }
+}</pre></div>
+
+<hr>
+
+<p><strong>Example (2):</strong>  <a href="https://github.com/afshin/sleuth-example/"><code>sleuth-example</code> is a fuller example of two services on a <code>sleuth</code> network</a> that need to communicate with each other.</p>
+
+<p>A complete tutorial based on that example can be found here: <a href="http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/">Service autodiscovery in Go with sleuth</a>.</p>
+
+<h2>
+<a id="test" class="anchor" href="#test" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Test</h2>
+
+<pre><code>go test -cover github.com/ursiform/sleuth
+</code></pre>
+
+<h2>
+<a id="q--a" class="anchor" href="#q--a" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Q &amp; A</h2>
+
+<p><strong>Q</strong>: How does it work? I understand <em>what</em> <code>sleuth</code> does, but I want to know <em>how</em> it does it.</p>
+
+<p><strong>A</strong>: Services that instantiate a <code>sleuth.Client</code> create an <em>ad hoc</em> <a href="https://github.com/zeromq/gyre"><code>Gyre</code></a> network. <code>Gyre</code> is the Go port of the <a href="https://github.com/zeromq/zyre"><code>Zyre</code></a> project, which is built on top of <a href="https://github.com/zeromq/libzmq">ØMQ</a> (ZeroMQ). Nodes in the network discover each other using a UDP beacon on port <code>5670</code>. The actual communication between nodes happens on ephemeral <code>TCP</code> connections. What <code>sleuth</code> does is to manage this life cycle:</p>
+
+<ul>
+<li>A peer joins the <code>Gyre</code> network as a member of the group <code>SLEUTH-v1</code>. If the peer offers a service, <em>i.e.</em>, if it has an <a href="https://golang.org/pkg/net/http/#Handler"><code>http.Handler</code></a>, it notifies the rest of the network when it announces itself. The peer might have no service to offer, thus operating in client-only mode, or it may offer <em>one</em> service.</li>
+<li>The peer finds other peers on the network. If you have asked the <code>sleuth</code> client to <a href="https://godoc.org/github.com/ursiform/sleuth#Client.WaitFor"><code>WaitFor()</code></a> one or more services to appear before continuing, that call will block until it has found those services.</li>
+<li>If the peer is offering a service, <code>sleuth</code> automatically listens for incoming requests in a separate goroutine and responds to incoming requests by invoking the <a href="https://golang.org/pkg/net/http/#Handler"><code>http.Handler</code></a> that was passed in during instantiation.</li>
+<li>When you make a request to an available service, <code>sleuth</code> marshals the request, sends it to one of the available peers that offers that service, and waits for a response. If the response succeeds, it returns an <a href="https://golang.org/pkg/net/http/#Response"><code>http.Response</code></a>; if it times out, it returns an error. The <code>sleuth</code> client <a href="https://godoc.org/github.com/ursiform/sleuth#Client.Do"><code>Do()</code></a> method has the same signature as the <code>http</code> client <a href="https://golang.org/pkg/net/http/#Client.Do"><code>Do()</code></a> method in order to operate as a drop-in replacement.</li>
+<li>When you want to <em>leave</em> the network, <em>e.g.</em>, when the application is quitting, the <code>sleuth</code> client <a href="https://godoc.org/github.com/ursiform/sleuth#Client.Close"><code>Close()</code></a> method immediately notifies the rest of the network that the peer is leaving. This is not strictly necessary because peers regularly check in to make sure the network knows they are alive, so the network automatically knows if a service has disappeared; but it is a good idea.</li>
+</ul>
+
+<hr>
+
+<p><strong>Q</strong>: What is the messaging protocol <code>sleuth</code> uses?</p>
+
+<p><strong>A</strong>: Under the hood, <code>sleuth</code> marshals HTTP requests and responses into plain JSON objects and then compresses them via <code>gzip</code>. Instead of adding another dependency on something like Protocol Buffers, <code>sleuth</code> depends on the fact that most API responses between microservices will be fairly small and it leaves the door open to ports in a wide variety of languages and environments. One hard dependency seemed quite enough.</p>
+
+<hr>
+
+<p><strong>Q</strong>: What if I have multiple instances of the same service?</p>
+
+<p><strong>A</strong>: Great! <code>sleuth</code> will automatically round-robin the requests each client makes to all services that share the same name.</p>
+
+<hr>
+
+<p><strong>Q</strong>: What happens if a service goes offline?</p>
+
+<p><strong>A</strong>: Whenever possible, a service should call its client's <a href="https://godoc.org/github.com/ursiform/sleuth#Client.Close"><code>Close()</code></a> method before exiting to notify the network of its departure. But even if a service fails to do that, the <code>sleuth</code> network's underlying <code>Gyre</code> network will detect within about one second that a peer has disappeared. All requests to that service will be routed to other peers offering the same service. If no peers exist for that service, then requests (which are made by calling the <code>sleuth</code> client <a href="https://godoc.org/github.com/ursiform/sleuth#Client.Do"><code>Do()</code></a> method) will return an unknown service error (code <code>919</code>), which means that if you're already handling errors when making requests, you're covered.</p>
+
+<hr>
+
+<p><strong>Q</strong>: It doesn't work.</p>
+
+<p><strong>A</strong>: That's not a question. But have you checked to make sure your firewall allows <code>UDP</code> traffic on port <code>5670</code>?</p>
+
+<hr>
+
+<p><strong>Q</strong>: It still doesn't work.</p>
+
+<p><strong>A</strong>: That's still not a question. But have you set the <code>Interface</code> field of your <a href="https://godoc.org/github.com/ursiform/sleuth#Config"><code>sleuth.Config</code></a> object? The services you want to connect need to be on the same network and if you leave that field blank, the underlying <code>Gyre</code> network may not reside where you think it does. If you run <code>ifconfig</code> you'll get a list of available interfaces on your system.</p>
+
+<hr>
+
+<p><strong>Q</strong>: Why is it called <code>sleuth</code>?</p>
+
+<p><strong>A</strong>: Because "sleuth" is the collective noun for a group of bears: the original reason for writing this library was to connect a group of <a href="https://github.com/ursiform/bear">bear</a>/<a href="https://github.com/ursiform/forest">forest</a> services. Also because a sleuth searches for things and discovers them. Hence the logo:</p>
+
+<p align="center">
+    <img src="https://cdn.rawgit.com/ursiform/sleuth/662e1c96d211b0d27c30fbfa043edc4b3bd6c35d/logo.svg">
+</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p><code>sleuth</code> is licensed under the <a href="LICENSE">MIT License</a>.</p>
+
+<p>The underlying libraries that <code>sleuth</code> relies on, <a href="https://github.com/zeromq/gyre"><code>Gyre</code></a> and <a href="https://github.com/zeromq/libzmq"><code>libzmq</code></a>, are licensed under the <a href="http://www.gnu.org/licenses/lgpl-3.0.en.html">LGPL</a>. In effect, users who do not plan on modifying <code>Gyre</code> or <code>libzmq</code> can release their own applications under any license they see fit.</p>
+
+<h2>
+<a id="resources" class="anchor" href="#resources" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resources</h2>
+
+<ul>
+<li><a href="https://godoc.org/github.com/ursiform/sleuth">API documentation</a></li>
+<li>
+<a href="http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/">Service autodiscovery in Go with sleuth</a> (tutorial)</li>
+</ul>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/ursiform/sleuth/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/ursiform/sleuth/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/ursiform/sleuth"></a> is maintained by <a href="https://github.com/ursiform">ursiform</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
