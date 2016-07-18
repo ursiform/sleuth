@@ -21,20 +21,21 @@ type request struct {
 }
 
 func reqMarshal(group, dest, handle string, in *http.Request) ([]byte, error) {
-	out := &request{}
+	out := &request{
+		Destination: dest,
+		Handle:      handle,
+		Header:      map[string][]string(in.Header),
+		Method:      in.Method,
+	}
 	if in.Body != nil {
 		if body, err := ioutil.ReadAll(in.Body); err == nil {
 			out.Body = body
 		}
 	}
-	out.Header = map[string][]string(in.Header)
-	out.Method = in.Method
 	// Scheme and Host are used by sleuth for routing, but should not be sent.
 	in.URL.Scheme = ""
 	in.URL.Host = ""
 	out.URL = in.URL.String()
-	out.Destination = dest
-	out.Handle = handle
 	marshalled, err := json.Marshal(out)
 	if err != nil {
 		return nil, newError(errReqMarshal, err.Error())

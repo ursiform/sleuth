@@ -51,8 +51,8 @@ func (c *Client) add(group, name, node, service, version string) error {
 	}
 	// Node and service are required. Version is optional.
 	if node == "" || service == "" {
-		return newError(errAdd, "failed to add %s node?=%t, type?=%t",
-			name, node != "", service != "")
+		format := "add failed for name=\"%s\", node=\"%s\", service=\"%s\""
+		return newError(errAdd, format, name, node, service)
 	}
 	// Associate the node name with its service in the directory.
 	c.directory[name] = service
@@ -71,9 +71,9 @@ func (c *Client) add(group, name, node, service, version string) error {
 	return nil
 }
 
+// Blocks until the required services are available to the client.
 // Returns true if it had to block and false if it returns immediately.
 func (c *Client) block(services ...string) bool {
-	// Block until the required services are available to the client.
 	c.additions.Lock()
 	defer c.additions.Unlock()
 	// Even though the client may have just checked to see if services exist,
@@ -106,8 +106,7 @@ func (c *Client) Close() error {
 		return newError(errLeave, err.Error())
 	}
 	if err := c.node.Stop(); err != nil {
-		c.log.Warn("sleuth: %s %s [%d]",
-			c.node.Name(), err.Error(), warnClose)
+		c.log.Warn("sleuth: %s %s [%d]", c.node.Name(), err.Error(), warnClose)
 	}
 	return nil
 }
@@ -260,8 +259,9 @@ func newClient(group string, node *gyre.Gyre, out *logger.Logger) *Client {
 		directory: make(map[string]string),
 		group:     group,
 		listener: &listener{
-			new(sync.Mutex),
-			make(map[string]chan *http.Response)},
+			Mutex:   new(sync.Mutex),
+			handles: make(map[string]chan *http.Response),
+		},
 		log:      out,
 		node:     node,
 		Timeout:  time.Millisecond * 500,

@@ -63,8 +63,8 @@ func initConfig(config *Config) *Config {
 		config.LogLevel = "listen"
 	}
 	if level, ok := logger.LogLevel[config.LogLevel]; !ok {
-		logger.MustError("LogLevel=\"%s\" is invalid; using \"%s\" [%d]",
-			config.LogLevel, "debug", errLogLevel)
+		format := "LogLevel=\"%s\" is invalid; using \"%s\" [%d]"
+		logger.MustError(format, config.LogLevel, "debug", errLogLevel)
 		config.LogLevel = "debug"
 		config.logLevel = logger.Debug
 	} else {

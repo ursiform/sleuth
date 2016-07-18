@@ -59,5 +59,8 @@ func (w *workers) remove(name string) (int, *peer) {
 }
 
 func newWorkers() *workers {
-	return &workers{Mutex: new(sync.Mutex), list: make([]*peer, 0)}
+	return &workers{
+		Mutex: new(sync.Mutex),
+		list:  make([]*peer, 0),
+	}
 }
