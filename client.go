@@ -19,11 +19,6 @@ type listener struct {
 	handles map[string]chan *http.Response
 }
 
-type notifier struct {
-	*sync.Mutex
-	notify chan struct{}
-}
-
 // Client is the peer on the sleuth network that makes requests and, if a
 // handler has been provided, responds to peer requests.
 type Client struct {
@@ -40,8 +35,8 @@ type Client struct {
 	log       *logger.Logger
 	node      *gyre.Gyre
 
-	directory map[string]string   // map[node-name]service-type
-	services  map[string]*workers // map[service-type]service-workers
+	directory map[string]string // map[node-name]service-type
+	services  *pool
 }
 
 func (c *Client) add(group, name, node, service, version string) error {
@@ -56,17 +51,12 @@ func (c *Client) add(group, name, node, service, version string) error {
 	}
 	// Associate the node name with its service in the directory.
 	c.directory[name] = service
-	// Create a service workers collection if necessary.
-	if c.services[service] == nil {
-		c.services[service] = newWorkers()
-	}
+	// Idempotently create a service workers pool.
+	c.services.add(service)
 	// Add peer to the service workers.
 	p := &peer{name: name, node: node, service: service, version: version}
-	c.services[service].add(p)
-	// If necessary, notify the additions channel that a peer has been added.
-	if c.additions.notify != nil {
-		c.additions.notify <- struct{}{}
-	}
+	c.services.workers[service].add(p)
+	c.additions.notify()
 	c.log.Info("sleuth: add %s/%s %s to %s", service, version, name, c.group)
 	return nil
 }
@@ -74,8 +64,6 @@ func (c *Client) add(group, name, node, service, version string) error {
 // Blocks until the required services are available to the client.
 // Returns true if it had to block and false if it returns immediately.
 func (c *Client) block(services ...string) bool {
-	c.additions.Lock()
-	defer c.additions.Unlock()
 	// Even though the client may have just checked to see if services exist,
 	// the check is performed here in case there was a delay waiting for the
 	// additions mutex to become available.
@@ -83,13 +71,13 @@ func (c *Client) block(services ...string) bool {
 		return false
 	}
 	c.log.Blocked("sleuth: waiting for client to find %s", services)
-	c.additions.notify = make(chan struct{})
-	for range c.additions.notify {
+	c.additions.activate()
+	for range c.additions.stream {
 		if c.has(services...) {
 			break
 		}
 	}
-	c.additions.notify = nil
+	c.additions.deactivate()
 	c.log.Unblocked("sleuth: client found %s", services)
 	return true
 }
@@ -151,7 +139,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 		err := newError(errScheme, "URL scheme must be \"%s\" in %s", scheme, url)
 		return nil, err
 	}
-	services, ok := c.services[to]
+	peers, ok := c.services.get(to)
 	if !ok {
 		return nil, newError(errUnknownService, "%s is an unknown service", to)
 	}
@@ -159,7 +147,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err.(*Error).escalate(errDo)
 	}
-	p := services.next()
+	p := peers.next()
 	c.log.Debug("sleuth: %s %s via %s", req.Method, url, p.name)
 	if err = c.node.Whisper(p.node, payload); err != nil {
 		return nil, newError(errReqWhisper, err.Error())
@@ -182,7 +170,7 @@ func (c *Client) has(services ...string) bool {
 	}
 	total := len(verified)
 	for service := range verified {
-		if workers, ok := c.services[service]; ok && workers.available() {
+		if peers, ok := c.services.get(service); ok && peers.available() {
 			verified[service] = true
 			available += 1
 		}
@@ -214,9 +202,10 @@ func (c *Client) receive(payload []byte) error {
 
 func (c *Client) remove(name string) {
 	if service, ok := c.directory[name]; ok {
-		remaining, _ := c.services[service].remove(name)
-		if remaining == 0 {
-			delete(c.services, service)
+		if peers, ok := c.services.get(service); ok {
+			if remaining, _ := peers.remove(name); remaining == 0 {
+				c.services.remove(service)
+			}
 		}
 		delete(c.directory, name)
 		c.log.Info("sleuth: remove %s:%s", service, name)
@@ -255,16 +244,22 @@ func (c *Client) WaitFor(services ...string) error {
 
 func newClient(group string, node *gyre.Gyre, out *logger.Logger) *Client {
 	return &Client{
-		additions: &notifier{Mutex: new(sync.Mutex)},
+		additions: &notifier{
+			Mutex:  new(sync.Mutex),
+			stream: make(chan struct{}),
+		},
 		directory: make(map[string]string),
 		group:     group,
 		listener: &listener{
 			Mutex:   new(sync.Mutex),
 			handles: make(map[string]chan *http.Response),
 		},
-		log:      out,
-		node:     node,
-		Timeout:  time.Millisecond * 500,
-		services: make(map[string]*workers),
+		log:     out,
+		node:    node,
+		Timeout: time.Millisecond * 500,
+		services: &pool{
+			Mutex:   new(sync.Mutex),
+			workers: make(map[string]*workers),
+		},
 	}
 }

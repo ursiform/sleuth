@@ -187,17 +187,18 @@ func TestClientRemove(t *testing.T) {
 	c := newClient(GROUP, nil, log)
 	name := "foo"
 	service := "baz"
-	if c.services[service] != nil {
+	workers := c.services.workers
+	if workers[service] != nil {
 		t.Errorf("expected workers to be empty")
 		return
 	}
 	c.add(GROUP, name, "node id", service, "v0.0.1")
-	if c.services[service] == nil || !c.services[service].available() {
+	if workers[service] == nil || !workers[service].available() {
 		t.Errorf("expected client add to succeed")
 		return
 	}
 	c.remove(name)
-	if c.services[service] != nil {
+	if workers[service] != nil {
 		t.Errorf("expected client remove to succeed")
 		return
 	}

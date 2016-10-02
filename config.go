@@ -24,7 +24,7 @@ type Config struct {
 	// Interface is the system network interface sleuth should use, e.g. "en0".
 	Interface string `json:"interface,omitempty"`
 
-	// LogLevel is the ursiform.Logger level for sleuth. The default is "listen".
+	// LogLevel is the ursiform.Logger level for sleuth. The default is "silent".
 	// The options, in order of increasing verbosity, are:
 	// "silent"    No log output at all.
 	// "error"     Only errors are logged.
@@ -60,7 +60,7 @@ func initConfig(config *Config) *Config {
 		config.group = group
 	}
 	if config.LogLevel == "" {
-		config.LogLevel = "listen"
+		config.LogLevel = "silent"
 	}
 	if level, ok := logger.LogLevel[config.LogLevel]; !ok {
 		format := "LogLevel=\"%s\" is invalid; using \"%s\" [%d]"
