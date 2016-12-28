@@ -426,7 +426,7 @@ func TestZipUnzip(t *testing.T) {
 
 func TestIntegratedCycle(t *testing.T) {
 	addr := "sleuth-test-server-one"
-	client, err := New(&Config{group: GROUP})
+	client, err := New(&Config{group: GROUP, LogLevel: "warn"})
 	if err != nil {
 		t.Errorf("client instantiation failed: %s", err.Error())
 		return
@@ -450,11 +450,13 @@ func TestIntegratedCycle(t *testing.T) {
 			t.Errorf("server close failed: %s", err.Error())
 		}
 	}(server, t)
-	// Wait until the server becomes available.
-	client.WaitFor(addr)
+	// Wait until the server becomes available. Confirm dupicate warning.
+	client.WaitFor(addr, addr)
 	// Set timeout to 10 seconds to accommodate slow test spin-up.
 	client.Timeout = time.Second * 10
-	if client.block(addr) {
+	required := make(map[string]struct{})
+	required[addr] = struct{}{}
+	if client.block(required, []string{addr}) {
 		t.Errorf("call to block should have returned immediately")
 	}
 	body := "foo bar baz"

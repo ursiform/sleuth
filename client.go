@@ -63,17 +63,17 @@ func (c *Client) add(group, name, node, service, version string) error {
 
 // Blocks until the required services are available to the client.
 // Returns true if it had to block and false if it returns immediately.
-func (c *Client) block(services ...string) bool {
+func (c *Client) block(required map[string]struct{}, services []string) bool {
 	// Even though the client may have just checked to see if services exist,
 	// the check is performed here in case there was a delay waiting for the
 	// additions mutex to become available.
-	if c.has(services...) {
+	if c.has(required) {
 		return false
 	}
 	c.log.Blocked("sleuth: waiting for client to find %s", services)
 	c.additions.activate()
 	for range c.additions.stream {
-		if c.has(services...) {
+		if c.has(required) {
 			break
 		}
 	}
@@ -161,21 +161,15 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return nil, newError(errTimeout, "%s {%s}%s timed out", req.Method, to, url)
 }
 
-func (c *Client) has(services ...string) bool {
-	// Check to see if required services are already registered.
-	verified := make(map[string]bool)
+func (c *Client) has(required map[string]struct{}) bool {
+	// Check to see if required services already exist locally.
 	available := 0
-	for _, service := range services {
-		verified[service] = false
-	}
-	total := len(verified)
-	for service := range verified {
+	for service := range required {
 		if peers, ok := c.services.get(service); ok && peers.available() {
-			verified[service] = true
 			available += 1
 		}
 	}
-	return available == total
+	return available == len(required)
 }
 
 func (c *Client) listen(handle string, listener chan *http.Response) {
@@ -236,8 +230,16 @@ func (c *Client) WaitFor(services ...string) error {
 	if c.closed {
 		return newError(errClosed, "client is closed").escalate(errWait)
 	}
-	if !c.has(services...) {
-		c.block(services...)
+	// Collapse services and make sure all values are unique.
+	required := make(map[string]struct{})
+	for _, service := range services {
+		required[service] = struct{}{}
+	}
+	if len(required) != len(services) {
+		c.log.Warn("sleuth: %v contains duplicates [%d]", services, warnDuplicate)
+	}
+	if !c.has(required) {
+		c.block(required, services)
 	}
 	return nil
 }

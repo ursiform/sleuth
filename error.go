@@ -10,6 +10,7 @@ const (
 	// Warnings are in the 801-899 range.
 	warnInterface = 801
 	warnClose     = 802
+	warnDuplicate = 803
 	// Errors are in the 901-999 range.
 	errNew              = 901
 	errDispatch         = 902
