@@ -51,7 +51,11 @@ func main() {
   handler := new(echoHandler)
   // In the real world, the Interface field of the sleuth.Config object
   // should be set so that all services are on the same subnet.
-  config := &sleuth.Config{Handler: handler, Service: "echo-service"}
+  config := &sleuth.Config{
+    Handler: handler,
+    LogLevel: "debug",
+    Service: "echo-service",
+  }
   server, err := sleuth.New(config)
   if err != nil {
     panic(err.Error())
@@ -79,7 +83,7 @@ func main() {
 	service := "echo-service"
 	// In the real world, the Interface field of the sleuth.Config object
 	// should be set so that all services are on the same subnet.
-	config := &sleuth.Config{LogLevel: "silent"}
+	config := &sleuth.Config{LogLevel: "debug"}
 	client, err := sleuth.New(config)
 	if err != nil {
 		panic(err.Error())
