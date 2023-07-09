@@ -8,7 +8,7 @@ client that offers no services and as any service that speaks HTTP. Its
 primary use case is for microservices on the same network that make calls to
 one another.
 
-For a full introduction and tutorial, check out: [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/)
+For a full introduction and tutorial, check out: [Service autodiscovery in Go with sleuth](http://darian.link/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/)
 
 ## Installation
 `sleuth` is dependent on [`libzmq`](https://github.com/zeromq/libzmq), which can be installed either from source or from binaries. For more information, please refer to [ØMQ: "Get the Software"](http://zeromq.org/intro:get-the-software) or the [`libzmq` repository](https://github.com/zeromq/libzmq).
@@ -110,7 +110,7 @@ func main() {
 
 **Example (2):**  [`sleuth-example` is a fuller example of two services on a `sleuth` network](https://github.com/afshin/sleuth-example/) that need to communicate with each other.
 
-A complete tutorial based on that example can be found here: [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/).
+A complete tutorial based on that example can be found here: [Service autodiscovery in Go with sleuth](http://darian.link/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/).
 
 ## Test
     go test -cover github.com/ursiform/sleuth
@@ -173,4 +173,4 @@ The underlying libraries that `sleuth` relies on, [`Gyre`](https://github.com/ze
 ## Resources
 
 * [API documentation](https://godoc.org/github.com/ursiform/sleuth)
-* [Service autodiscovery in Go with sleuth](http://darian.af/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/) (tutorial)
+* [Service autodiscovery in Go with sleuth](http://darian.link/post/master-less-peer-to-peer-micro-service-autodiscovery-in-golang-with-sleuth/) (tutorial)
